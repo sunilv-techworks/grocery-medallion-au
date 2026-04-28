@@ -40,5 +40,22 @@ def daily(
     rprint("[yellow]Implementation pending — Phase 8[/yellow]")
 
 
+@app.command()
+def products(
+    count: int = typer.Option(2000, "--count", help="Number of SKUs to generate"),
+    seed: int = typer.Option(42, "--seed", help="Random seed"),
+    output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
+) -> None:
+    """Generate dim_product and write it to Parquet."""
+    from grocery_gen.dimensions.products import generate_products
+    from grocery_gen.writers.parquet import write_rows
+
+    rprint(f"[cyan]Generating[/cyan] {count} products with seed={seed}...")
+    rows = generate_products(n=count, seed=seed)
+    output_path = output_dir / "dim_product.parquet"
+    written = write_rows(rows, output_path)
+    rprint(f"[green]Wrote[/green] {len(rows)} products to {written}")
+
+
 if __name__ == "__main__":
     app()
