@@ -307,10 +307,7 @@ def _make_fresh_row(
     if retail <= cost:
         # Ensure retail > cost by picking the smallest valid charm ending above cost
         valid = [e for e in (0.49, 0.79, 0.95, 0.99) if e > cost]
-        if valid:
-            retail = round(valid[0], 2)
-        else:
-            retail = round(int(cost) + 1 + 0.49, 2)
+        retail = round(valid[0], 2) if valid else round(int(cost) + 1 + 0.49, 2)
 
     suppliers = _get_suppliers("Fresh Produce", category)
     supplier_idx = int(rng.integers(0, len(suppliers)))
@@ -445,10 +442,7 @@ def generate_products(n: int = 2000, seed: int = 42) -> list[ProductRow]:
                 retail = apply_charm_pricing(raw_retail, rng)
                 if retail <= cost:
                     valid_endings = [e for e in (0.49, 0.79, 0.95, 0.99) if e > cost]
-                    if valid_endings:
-                        retail = round(valid_endings[0], 2)
-                    else:
-                        retail = round(int(cost) + 1 + 0.49, 2)
+                    retail = round(valid_endings[0], 2) if valid_endings else round(int(cost) + 1 + 0.49, 2)
 
                 gst = is_gst_applicable(department, category)
                 name = _generate_product_name(
