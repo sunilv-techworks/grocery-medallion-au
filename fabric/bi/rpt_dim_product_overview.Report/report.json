@@ -1,0 +1,51 @@
+{
+  "config": "{\"version\":\"5.73\",\"themeCollection\":{\"baseTheme\":{\"name\":\"CY26SU05\",\"version\":{\"visual\":\"2.9.0\",\"report\":\"3.3.0\",\"page\":\"2.3.1\"},\"type\":2}},\"activeSectionIndex\":0,\"defaultDrillFilterOtherVisuals\":true,\"settings\":{\"useNewFilterPaneExperience\":true,\"allowChangeFilterTypes\":true,\"useStylableVisualContainerHeader\":true,\"queryLimitOption\":6,\"useEnhancedTooltips\":true,\"exportDataMode\":1,\"useDefaultAggregateDisplayName\":true},\"objects\":{\"section\":[{\"properties\":{\"verticalAlignment\":{\"expr\":{\"Literal\":{\"Value\":\"'Top'\"}}}}}]},\"creationSource\":\"QuickCreate\"}",
+  "layoutOptimization": 0,
+  "resourcePackages": [
+    {
+      "resourcePackage": {
+        "disabled": false,
+        "items": [
+          {
+            "name": "CY26SU05",
+            "path": "BaseThemes/CY26SU05.json",
+            "type": 202
+          }
+        ],
+        "name": "SharedResources",
+        "type": 2
+      }
+    }
+  ],
+  "sections": [
+    {
+      "config": "{}",
+      "displayName": "Page 1",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.00,
+      "name": "bf946828d0f2426c3e8e",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"1453fc127d0632dbfa77\",\"layouts\":[{\"id\":0,\"position\":{\"x\":636,\"y\":99,\"width\":591,\"height\":621,\"z\":1,\"tabOrder\":1}}],\"singleVisual\":{\"visualType\":\"clusteredBarChart\",\"projections\":{\"Category\":[{\"queryRef\":\"dim_product.department\",\"active\":true}],\"Y\":[{\"queryRef\":\"Sum(dim_product.retail_price_aud)\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"d\",\"Entity\":\"dim_product\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"department\"},\"Name\":\"dim_product.department\",\"NativeReferenceName\":\"department\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"retail_price_aud\"}},\"Function\":1},\"Name\":\"Sum(dim_product.retail_price_aud)\",\"NativeReferenceName\":\"Average of retail_price_aud\"}],\"OrderBy\":[{\"Direction\":2,\"Expression\":{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"retail_price_aud\"}},\"Function\":1}}}]},\"drillFilterOtherVisuals\":true,\"hasDefaultSort\":true}}",
+          "filters": "[]",
+          "height": 621.00,
+          "width": 591.00,
+          "x": 636.00,
+          "y": 99.00,
+          "z": 1.00
+        },
+        {
+          "config": "{\"name\":\"bb53ebaac3c434f50638\",\"layouts\":[{\"id\":0,\"position\":{\"x\":35.47344110854504,\"y\":99.03002309468823,\"z\":0,\"width\":591.2240184757507,\"height\":620.7852193995382,\"tabOrder\":0}}],\"singleVisual\":{\"visualType\":\"treemap\",\"projections\":{\"Group\":[{\"queryRef\":\"dim_product.department\",\"active\":true}],\"Details\":[{\"queryRef\":\"dim_product.category\"}],\"Values\":[{\"queryRef\":\"CountNonNull(dim_product.product_id)\"}]},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"d\",\"Entity\":\"dim_product\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"department\"},\"Name\":\"dim_product.department\",\"NativeReferenceName\":\"department\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"category\"},\"Name\":\"dim_product.category\",\"NativeReferenceName\":\"category\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"product_id\"}},\"Function\":5},\"Name\":\"CountNonNull(dim_product.product_id)\",\"NativeReferenceName\":\"product_id\"}]},\"drillFilterOtherVisuals\":true}}",
+          "filters": "[]",
+          "height": 620.79,
+          "width": 591.22,
+          "x": 35.47,
+          "y": 99.03,
+          "z": 0.00
+        }
+      ],
+      "width": 1280.00
+    }
+  ]
+}
