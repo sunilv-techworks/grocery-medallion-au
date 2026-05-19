@@ -33,6 +33,9 @@ Bronze rules:
   automatically. Schema enforcement happens in Silver, not here.
 - Bronze is the boundary with the outside world; landing files live in this
   same lakehouse to keep that boundary self-contained.
+
+  # Round-trip test 2026-04-27
+
 """
 
 from datetime import datetime, timezone
