@@ -19,6 +19,7 @@ dev-dependencies = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = ["fabric/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
