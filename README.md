@@ -12,16 +12,31 @@ This project generates synthetic transactional data for a fictional Australian g
 
 ## Architecture
 
-- **Bronze layer:** Raw Parquet files landed from the synthetic generator, partitioned by date and domain.
-- **Silver layer:** Cleaned, conformed, and enriched dimension and fact tables; deduplication and schema enforcement via Great Expectations.
-- **Gold layer:** Star-schema semantic model optimised for Power BI; surrogate keys, slowly-changing dimensions, and pre-aggregated measures.
-- **CI/CD:** GitHub Actions runs linting, type-checking, and tests on every push; Fabric artefacts are deployed via GitHub integration (Phase 7).
-- **Data quality:** Great Expectations expectation suites are shared between the local generator pipeline and Fabric notebooks, ensuring consistent validation across environments.
-- **Governance:** Microsoft Purview catalogue and lineage (Phase 6).
-- **Forecasting:** Containerised demand forecasting model for fresh produce, trained and deployed via Azure AI Foundry (Phase 9).
-- **Agent:** MCP server exposing the Gold semantic model to AI agents in Azure AI Foundry (Phase 10).
+### Fabric workspace topology
 
-An architecture diagram lives at `docs/images/architecture.png` (placeholder — to be added in Phase 4).
+Five function-split Fabric workspaces, each connected to this repo via Git integration (PAT, per-workspace subfolder):
+
+| Workspace | Git folder | Purpose |
+|---|---|---|
+| `ws-grocery-storage-dev` | `fabric/storage` | Three schema-enabled lakehouses: `lh_bronze`, `lh_silver`, `lh_gold` |
+| `ws-grocery-engineering-dev` | `fabric/engineering` | PySpark notebooks + Fabric pipeline |
+| `ws-grocery-semantic-dev` | `fabric/semantic` | Direct Lake semantic model |
+| `ws-grocery-bi-dev` | `fabric/bi` | Power BI reports |
+| `ws-grocery-ai-dev` | `fabric/ai` | MCP server + Foundry agent (Phase 10) |
+
+### Medallion layers
+
+- **Bronze (`lh_bronze.conformed.dim_product`):** Raw Parquet landed from the synthetic generator, ingested with an audit batch-ID column.
+- **Silver (`lh_silver.conformed.dim_product`):** DQ-validated — null checks, duplicate checks, price-above-cost assertion.
+- **Gold (`lh_gold.conformed.dim_product`):** Derived columns — `is_perishable`, `is_seasonal`, `price_tier`, `margin_pct` — optimised for the semantic model.
+- **Semantic model (`sm_grocery_core`):** Direct Lake on Gold; powers `rpt_dim_product_overview` (treemap by department/category, avg retail price by department).
+
+### Remaining phases
+
+- **CI/CD:** GitHub Actions runs linting, type-checking, and tests on every push.
+- **Governance:** Microsoft Purview catalogue and lineage (Phase 6).
+- **Forecasting:** Containerised demand forecasting model for fresh produce, deployed via Azure AI Foundry (Phase 9).
+- **Agent:** MCP server exposing the Gold semantic model to AI agents in Azure AI Foundry (Phase 10).
 
 ## Repository layout
 
@@ -29,8 +44,14 @@ An architecture diagram lives at `docs/images/architecture.png` (placeholder —
 grocery-medallion-au/
 ├── .github/workflows/      CI/CD pipeline definitions
 ├── docs/                   Design documents and architecture diagrams
+├── fabric/
+│   ├── storage/            Lakehouse definitions (lh_bronze, lh_silver, lh_gold)
+│   ├── engineering/        PySpark notebooks + Fabric pipeline
+│   ├── semantic/           Direct Lake semantic model
+│   ├── bi/                 Power BI reports
+│   └── ai/                 MCP server + Foundry agent (Phase 10)
 ├── packages/
-│   ├── grocery-gen/        Synthetic data generator CLI (Phase 1–3)
+│   ├── grocery-gen/        Synthetic data generator CLI
 │   ├── grocery-forecast/   Demand forecasting model (Phase 9)
 │   └── grocery-mcp/        MCP server for AI agent (Phase 10)
 ├── .pre-commit-config.yaml Pre-commit hooks (ruff, mypy, etc.)
@@ -54,10 +75,10 @@ uv run grocery-gen --help
 ## Roadmap
 
 - [x] Phase 1: Project skeleton + CLI scaffolding
-- [ ] Phase 2: Synthetic data generator (dimensions + facts)
-- [ ] Phase 3: Containerise generator + GitHub Actions CI
-- [ ] Phase 4: Fabric Bronze/Silver/Gold notebooks
-- [ ] Phase 5: Semantic model + Power BI reports
+- [x] Phase 2: `dim_product` synthetic generator — 2 000 SKUs, AU GST rules, seasonal fresh goods, charm pricing
+- [x] Phase 3: Fabric spike — 5-workspace topology, medallion lakehouses, PySpark notebooks, pipeline, Direct Lake semantic model, Power BI report, Git round-trip verified (`v0.3.0-phase3-spike`)
+- [ ] Phase 4: Full dimension suite (stores, customers, dates, promotions)
+- [ ] Phase 5: Fact tables + incremental load
 - [ ] Phase 6: Purview catalogue + lineage
 - [ ] Phase 7: CI/CD for Fabric artefacts via GitHub
 - [ ] Phase 8: Daily incremental generator scheduled in Fabric
@@ -70,4 +91,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Author
 
-Your Name — [your-email@example.com](mailto:your-email@example.com)
+Sunil Venkatesh — [sunilv@techworksconsulting.com.au](mailto:sunilv@techworksconsulting.com.au)

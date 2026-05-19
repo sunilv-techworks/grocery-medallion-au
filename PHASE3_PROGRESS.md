@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-27
 
-## Status: PAUSED — resuming Step 11 (semantic model)
+## Status: COMPLETE ✅
 
 ---
 
@@ -66,9 +66,9 @@ Last updated: 2026-04-27
 
 - [x] **Step 13:** End-to-end test — pipeline ran green, semantic model refreshed, `rpt_dim_product_overview` renders correctly (treemap: 10 departments, bar chart: Alcohol top ~$40, Fresh Produce bottom ~$5) ✅
 
-- [ ] **Step 14:** Round-trip Git verification — edit a notebook from VS Code, PR to main, confirm workspace picks it up
+- [x] **Step 14:** Round-trip Git verification — notebook edit in VS Code → PR → merge → Fabric workspace sync confirmed ✅
 
-- [ ] **Step 15:** Tag `v0.3.0-phase3-spike`, update README Architecture section
+- [x] **Step 15:** Tagged `v0.3.0-phase3-spike`, README Architecture section updated with 5-workspace topology table ✅
 
 ---
 
