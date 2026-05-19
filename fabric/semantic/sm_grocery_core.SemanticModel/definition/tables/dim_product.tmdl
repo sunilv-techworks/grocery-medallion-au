@@ -1,0 +1,211 @@
+table dim_product
+	lineageTag: 12c1cb0c-2b6b-4b6f-ab29-93d0dd54055d
+	sourceLineageTag: [conformed].[dim_product]
+
+	column product_id
+		dataType: string
+		lineageTag: fe242c2c-bef7-4861-bcd4-b76cf306dd24
+		sourceLineageTag: product_id
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column sku
+		dataType: string
+		lineageTag: c2aa1284-7130-4caf-a12e-905152999c25
+		sourceLineageTag: sku
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column name
+		dataType: string
+		lineageTag: d04e11dc-2ff3-4cc7-8f99-2be526afba70
+		sourceLineageTag: name
+		summarizeBy: none
+		sourceColumn: name
+
+		annotation SummarizationSetBy = Automatic
+
+	column department
+		dataType: string
+		lineageTag: 4ea0ab5e-4a58-4482-a34f-32c3ddb1544a
+		sourceLineageTag: department
+		summarizeBy: none
+		sourceColumn: department
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		lineageTag: da94615f-d66e-44c5-95f3-46dacc7fff49
+		sourceLineageTag: category
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column subcategory
+		dataType: string
+		lineageTag: 0b9a0efe-67c6-41b5-8221-8ab47d6866bb
+		sourceLineageTag: subcategory
+		summarizeBy: none
+		sourceColumn: subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column brand
+		dataType: string
+		lineageTag: 98fcfa82-d662-418b-9e14-3ef62f03abbd
+		sourceLineageTag: brand
+		summarizeBy: none
+		sourceColumn: brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_private_label
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 1413d8f8-9627-4041-82fa-63b697073ba5
+		sourceLineageTag: is_private_label
+		summarizeBy: none
+		sourceColumn: is_private_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit_of_measure
+		dataType: string
+		lineageTag: 58059296-2678-4362-b2c4-3a0c4f1c6535
+		sourceLineageTag: unit_of_measure
+		summarizeBy: none
+		sourceColumn: unit_of_measure
+
+		annotation SummarizationSetBy = Automatic
+
+	column pack_size
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 14e538ee-15c0-491a-81bd-095e80a62d83
+		sourceLineageTag: pack_size
+		summarizeBy: sum
+		sourceColumn: pack_size
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column cost_price_aud
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 936ae3b3-2d1c-4439-8c00-58f493032915
+		sourceLineageTag: cost_price_aud
+		summarizeBy: sum
+		sourceColumn: cost_price_aud
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column retail_price_aud
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: c3ccb407-8e50-4731-a955-e4489e260f7a
+		sourceLineageTag: retail_price_aud
+		summarizeBy: sum
+		sourceColumn: retail_price_aud
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column gst_applicable
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a4a8e50d-dc1f-487b-af0b-41f6034cef08
+		sourceLineageTag: gst_applicable
+		summarizeBy: none
+		sourceColumn: gst_applicable
+
+		annotation SummarizationSetBy = Automatic
+
+	column shelf_life_days
+		dataType: double
+		lineageTag: a3c1a217-3275-4cec-b713-00f4b674ba4f
+		sourceLineageTag: shelf_life_days
+		summarizeBy: sum
+		sourceColumn: shelf_life_days
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column wastage_rate_baseline
+		dataType: double
+		lineageTag: e50fdcca-4ae1-4731-a5c2-60d2ab3fddc0
+		sourceLineageTag: wastage_rate_baseline
+		summarizeBy: sum
+		sourceColumn: wastage_rate_baseline
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column supplier_id
+		dataType: string
+		lineageTag: cfe8c8ea-a04e-401a-8679-2bd69efbe458
+		sourceLineageTag: supplier_id
+		summarizeBy: none
+		sourceColumn: supplier_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_perishable
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 1ca6129e-a3b0-483a-8bd7-24ee2476e911
+		sourceLineageTag: is_perishable
+		summarizeBy: none
+		sourceColumn: is_perishable
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_seasonal
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 21aeb6cc-057e-49d5-ad35-9171d32f0953
+		sourceLineageTag: is_seasonal
+		summarizeBy: none
+		sourceColumn: is_seasonal
+
+		annotation SummarizationSetBy = Automatic
+
+	column price_tier
+		dataType: string
+		lineageTag: f1e18e56-be7a-43a7-b6d9-17d6021cea69
+		sourceLineageTag: price_tier
+		summarizeBy: none
+		sourceColumn: price_tier
+
+		annotation SummarizationSetBy = Automatic
+
+	column margin_pct
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: f11f8a56-d193-43f7-a4b7-828de3656a31
+		sourceLineageTag: margin_pct
+		summarizeBy: sum
+		sourceColumn: margin_pct
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	partition dim_product = entity
+		mode: directLake
+		source
+			entityName: dim_product
+			schemaName: conformed
+			expressionSource: 'DirectLake - lh_gold'
+
