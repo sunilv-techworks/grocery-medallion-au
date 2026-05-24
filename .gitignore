@@ -54,3 +54,4 @@ data/
 # Distribution
 dist/
 build/
+.env
