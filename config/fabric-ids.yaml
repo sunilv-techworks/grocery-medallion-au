@@ -1,0 +1,9 @@
+environments:
+  dev:
+    workspaces:
+      storage: "5b41ba82-6075-49aa-90d8-94835e822115"
+      engineering: "6d4ec153-ea4d-4bd1-92ff-13f6c6ea83d7"
+      orchestration: "832c353e-3226-4e92-9ea7-66ffa2f4660e"
+      semantic: "a8ad9315-1e3f-4cda-b0dc-2c684e837141"
+      bi: "7c8e3700-1735-49fa-aed6-b73126456b92"
+      ai: "b982af59-a2bf-48d1-af27-cf53da699b64"
