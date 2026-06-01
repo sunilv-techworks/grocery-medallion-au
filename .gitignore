@@ -47,6 +47,9 @@ data/
 .env
 .envrc
 
+# Fabric deployment config (contains workspace GUIDs — not secrets, but environment-specific)
+config/fabric-ids.yaml
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb

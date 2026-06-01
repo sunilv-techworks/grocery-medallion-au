@@ -1,0 +1,12 @@
+# parameter.yml — fabric-cicd parameterisation
+# Phase 3.5: dev only, GUIDs match what's in the source.
+# Phase 7 will add prod replacements.
+
+find_replace: []
+
+# When Phase 7 adds replacements, entries look like:
+# find_replace:
+#   - find_value: "<dev-lakehouse-guid>"
+#     replace_value:
+#       dev: "<dev-lakehouse-guid>"
+#       prod: "<prod-lakehouse-guid>"

@@ -40,3 +40,11 @@ warn_return_any = true
 [tool.pytest.ini_options]
 testpaths = ["packages/*/tests"]
 addopts = "-ra --strict-markers"
+
+[dependency-groups]
+dev = [
+    "azure-identity>=1.25.3",
+    "fabric-cicd==0.1.30",
+    "pyyaml>=6.0",
+    "requests>=2.33.1",
+]

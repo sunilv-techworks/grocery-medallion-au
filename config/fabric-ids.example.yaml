@@ -1,0 +1,17 @@
+# Copy to config/fabric-ids.yaml and fill in your actual GUIDs.
+# The real file is gitignored (config/fabric-ids.yaml is in .gitignore).
+
+environments:
+  dev:
+    workspaces:
+      storage: "<storage-workspace-guid>"
+      engineering: "<engineering-workspace-guid>"
+      orchestration: "<orchestration-workspace-guid>"
+      semantic: "<semantic-workspace-guid>"
+      bi: "<bi-workspace-guid>"
+      ai: "<ai-workspace-guid>"
+
+  # Phase 7 will add prod:
+  # prod:
+  #   workspaces:
+  #     ...
