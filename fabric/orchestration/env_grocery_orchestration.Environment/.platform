@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Environment",
+    "displayName": "env_grocery_orchestration",
+    "description": "Environment"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b429fb8d-046a-b2c0-4365-c59748328337"
+  }
+}
