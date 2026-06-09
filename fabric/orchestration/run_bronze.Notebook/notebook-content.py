@@ -63,6 +63,8 @@ tables_to_process = [
 print(f"Bronze runner: group={group}, run_id={run_id}, "
       f"tables={[t['name'] for t in tables_to_process]}")
 
+spark.sql("CREATE SCHEMA IF NOT EXISTS conformed")
+
 for table in tables_to_process:
     activity_id = new_activity_id()
     started_at = log_run_start(run_id, activity_id, table["name"], "bronze")

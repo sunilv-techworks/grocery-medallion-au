@@ -76,6 +76,8 @@ rows = [
     for t in TABLES
 ]
 
+spark.sql("CREATE SCHEMA IF NOT EXISTS config")
+
 df = spark.createDataFrame(rows, schema=schema)
 (
     df.write

@@ -40,6 +40,8 @@ schema = StructType([
     StructField("metadata_version", StringType(), nullable=False),
 ])
 
+spark.sql("CREATE SCHEMA IF NOT EXISTS runs")
+
 empty = spark.createDataFrame([], schema=schema)
 (
     empty.write
