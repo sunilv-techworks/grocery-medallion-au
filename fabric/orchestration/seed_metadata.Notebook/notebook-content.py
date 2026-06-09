@@ -8,8 +8,14 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
+# META       "default_lakehouse": "a2f1aba8-3d5e-4482-9dce-475ef81832fa",
 # META       "default_lakehouse_name": "lh_orchestration",
-# META       "default_lakehouse_workspace_id": ""
+# META       "default_lakehouse_workspace_id": "832c353e-3226-4e92-9ea7-66ffa2f4660e",
+# META       "known_lakehouses": [
+# META         {
+# META           "id": "a2f1aba8-3d5e-4482-9dce-475ef81832fa"
+# META         }
+# META       ]
 # META     },
 # META     "environment": {}
 # META   }
