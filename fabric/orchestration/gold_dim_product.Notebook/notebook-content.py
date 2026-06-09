@@ -3,16 +3,23 @@
 # METADATA ********************
 
 # META {
-# META   "kernel_info": {"name": "synapse_pyspark"},
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
 # META   "dependencies": {
 # META     "lakehouse": {
 # META       "default_lakehouse_name": "lh_gold",
+# META       "default_lakehouse_workspace_id": "",
 # META       "known_lakehouses": [
-# META         {"name": "lh_silver"},
-# META         {"name": "lh_gold"}
+# META         {
+# META           "name": "lh_silver"
+# META         },
+# META         {
+# META           "name": "lh_gold"
+# META         }
 # META       ]
 # META     },
-# META     "environment": {"environmentName": "env_grocery_orchestration"}
+# META     "environment": {}
 # META   }
 # META }
 

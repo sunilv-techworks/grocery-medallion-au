@@ -8,11 +8,10 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
-# META       "default_lakehouse_name": "lh_orchestration"
+# META       "default_lakehouse_name": "lh_orchestration",
+# META       "default_lakehouse_workspace_id": ""
 # META     },
-# META     "environment": {
-# META       "environmentName": "env_grocery_orchestration"
-# META     }
+# META     "environment": {}
 # META   }
 # META }
 
