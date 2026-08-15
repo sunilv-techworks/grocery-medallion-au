@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-15
 
-## Status: IN PROGRESS — Step 3.1 (confirm dim_product.parquet landed in lh_bronze)
+## Status: IN PROGRESS — Step 3.2 (run pl_grocery_medallion end-to-end)
 
 Spec: `PHASE_3_5_SPEC_V2.md`
 Branch: `feature/phase-3.5-platform`
@@ -55,7 +55,7 @@ Branch: `feature/phase-3.5-platform`
 
 ## Section 3 — Retrofit Phase 3
 
-- [ ] **3.1** `lh_bronze/Files/landing/dim_product.parquet` confirmed present (or re-uploaded)
+- [x] **3.1** `lh_bronze/Files/landing/dim_product.parquet` confirmed present (or re-uploaded) ✅ — verified via OneLake DFS API, 95,285 bytes, last modified 2026-05-12 (carried over from Phase 3), no re-upload needed
 - [ ] **3.2** `pl_grocery_medallion` run end-to-end — 2000 rows in `lh_gold.conformed.dim_product`, 3 success rows in `lh_orchestration.runs.pipeline_runs`
 - [ ] **3.3** Phase 3 artifacts removed from `fabric/engineering/` (4 items), `deploy.py --unpublish-orphans` run against engineering workspace, items gone from `ws-grocery-engineering-dev`
 
