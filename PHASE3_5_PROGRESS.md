@@ -1,8 +1,8 @@
 # Phase 3.5 Progress Tracker
 
-Last updated: 2026-06-01
+Last updated: 2026-08-15
 
-## Status: IN PROGRESS — Step 2.10 (author pl_grocery_medallion pipeline in Fabric UI)
+## Status: IN PROGRESS — Step 3.1 (confirm dim_product.parquet landed in lh_bronze)
 
 Spec: `PHASE_3_5_SPEC_V2.md`
 Branch: `feature/phase-3.5-platform`
@@ -49,7 +49,7 @@ Branch: `feature/phase-3.5-platform`
 - [x] **2.7** Cross-lakehouse model verified against spec table ✅
 - [x] **2.8** All 7 notebooks deployed via `deploy.py` — Published in `ws-grocery-orchestration-dev` ✅
 - [x] **2.9** `init_runs_log` run once (creates table); `seed_metadata` run once (1 row in `config.table_metadata`) ✅ — lakehouse GUIDs written back by Fabric and committed to main
-- [ ] **2.10** `pl_grocery_medallion` pipeline created in Fabric UI — 4 activities (SeedMetadata → BronzeDims → SilverDims → GoldDims), synced to Git, re-deployed via `deploy.py`
+- [x] **2.10** `pl_grocery_medallion` pipeline created — 4 activities (SeedMetadata → BronzeDims → SilverDims → GoldDims) ✅ — authored directly as git-format `DataPipeline` item (using `pl_dim_product.DataPipeline` from Phase 3 as a template, notebook GUIDs pulled from the workspace via Fabric REST API) and published via `deploy.py`, skipping manual UI authoring; item id `f4785488-3a93-4718-bc14-c6e6c827101a` in `ws-grocery-orchestration-dev`
 
 ---
 
