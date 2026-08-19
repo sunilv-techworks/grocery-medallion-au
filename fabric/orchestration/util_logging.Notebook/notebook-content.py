@@ -8,8 +8,14 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
+# META       "default_lakehouse": "a2f1aba8-3d5e-4482-9dce-475ef81832fa",
 # META       "default_lakehouse_name": "lh_orchestration",
-# META       "default_lakehouse_workspace_id": ""
+# META       "default_lakehouse_workspace_id": "832c353e-3226-4e92-9ea7-66ffa2f4660e",
+# META       "known_lakehouses": [
+# META         {
+# META           "id": "a2f1aba8-3d5e-4482-9dce-475ef81832fa"
+# META         }
+# META       ]
 # META     },
 # META     "environment": {}
 # META   }
@@ -19,16 +25,21 @@
 
 """Shared logging helpers for runner notebooks. Included via %run util_logging.
 
-RUNS_LOG_TABLE uses the fully-qualified three-part name because callers will
-have different default lakehouses (run_bronze: lh_bronze; run_silver: lh_silver;
-run_gold: lh_orchestration). Using the three-part name means logging works
-regardless of the caller's default lakehouse.
+pipeline_runs lives in lh_orchestration, but callers default to lh_bronze or
+lh_silver (a different workspace) — three-part names only resolve within a
+single workspace, so writes go via the ABFSS path (RUNS_LOG_PATH) instead.
 """
 
 from datetime import datetime, timezone
 from uuid import uuid4
 
-RUNS_LOG_TABLE = "lh_orchestration.runs.pipeline_runs"
+# Cross-workspace: three-part names only resolve within a single workspace,
+# so pipeline_runs (in lh_orchestration) is written via its ABFSS path —
+# callers may default to lh_bronze/lh_silver/lh_orchestration.
+RUNS_LOG_PATH = (
+    "abfss://832c353e-3226-4e92-9ea7-66ffa2f4660e@onelake.dfs.fabric.microsoft.com/"
+    "a2f1aba8-3d5e-4482-9dce-475ef81832fa/Tables/runs/pipeline_runs"
+)
 METADATA_VERSION = "v1"
 
 
@@ -67,7 +78,7 @@ def _insert_log_row(run_id, activity_id, table_name, layer, status,
         schema=("run_id string, activity_id string, table_name string, layer string, "
                 "started_at_utc timestamp, ended_at_utc timestamp, status string, "
                 "row_count bigint, error_message string, metadata_version string"),
-    ).write.mode("append").saveAsTable(RUNS_LOG_TABLE)
+    ).write.format("delta").mode("append").save(RUNS_LOG_PATH)
 
 # METADATA ********************
 

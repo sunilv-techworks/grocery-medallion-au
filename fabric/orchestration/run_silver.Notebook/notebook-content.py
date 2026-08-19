@@ -8,17 +8,19 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
+# META       "default_lakehouse": "7e76a1e6-dacf-4e41-b5f0-6be7ecd0f0ca",
 # META       "default_lakehouse_name": "lh_silver",
-# META       "default_lakehouse_workspace_id": "",
+# META       "default_lakehouse_workspace_id": "5b41ba82-6075-49aa-90d8-94835e822115",
 # META       "known_lakehouses": [
 # META         {
-# META           "name": "lh_bronze"
+# META           "id": "fc6df3ce-1604-4c8d-9926-f3957ecb6ad5"
 # META         },
 # META         {
-# META           "name": "lh_silver"
+# META           "id": "7e76a1e6-dacf-4e41-b5f0-6be7ecd0f0ca"
 # META         },
 # META         {
-# META           "name": "lh_orchestration"
+# META           "id": "a2f1aba8-3d5e-4482-9dce-475ef81832fa",
+# META           "workspaceId": "832c353e-3226-4e92-9ea7-66ffa2f4660e"
 # META         }
 # META       ]
 # META     },
@@ -52,7 +54,13 @@ from pyspark.sql.functions import col, current_timestamp
 group = "conformed_dims"
 run_id = new_run_id()
 
-all_metadata = spark.table("lh_orchestration.config.table_metadata").collect()
+# Cross-workspace: three-part names only resolve within a single workspace,
+# so table_metadata (in lh_orchestration) is read via its ABFSS path.
+TABLE_METADATA_PATH = (
+    "abfss://832c353e-3226-4e92-9ea7-66ffa2f4660e@onelake.dfs.fabric.microsoft.com/"
+    "a2f1aba8-3d5e-4482-9dce-475ef81832fa/Tables/config/table_metadata"
+)
+all_metadata = spark.read.format("delta").load(TABLE_METADATA_PATH).collect()
 tables_to_process = [row for row in all_metadata if row["group"] == group]
 
 print(f"Silver runner: group={group}, run_id={run_id}, "

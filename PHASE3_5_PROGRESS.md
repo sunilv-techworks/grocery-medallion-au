@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-15
 
-## Status: IN PROGRESS — Step 3.2 (run pl_grocery_medallion end-to-end)
+## Status: IN PROGRESS — Step 3.3 (remove Phase 3 artifacts from fabric/engineering/)
 
 Spec: `PHASE_3_5_SPEC_V2.md`
 Branch: `feature/phase-3.5-platform`
@@ -56,7 +56,12 @@ Branch: `feature/phase-3.5-platform`
 ## Section 3 — Retrofit Phase 3
 
 - [x] **3.1** `lh_bronze/Files/landing/dim_product.parquet` confirmed present (or re-uploaded) ✅ — verified via OneLake DFS API, 95,285 bytes, last modified 2026-05-12 (carried over from Phase 3), no re-upload needed
-- [ ] **3.2** `pl_grocery_medallion` run end-to-end — 2000 rows in `lh_gold.conformed.dim_product`, 3 success rows in `lh_orchestration.runs.pipeline_runs`
+- [x] **3.2** `pl_grocery_medallion` run end-to-end — 2000 rows in `lh_gold.conformed.dim_product`, 3 success rows in `lh_orchestration.runs.pipeline_runs` ✅ — verified directly by reading both Delta tables; run_id `f19391f1-d5aa-4624-9d73-c07c1486b2b0`, bronze/silver/gold each logged `success` with `row_count=2000`
+  - Took 4 attempts to get green; each surfaced a real, previously-untested bug in the §2 notebooks (not a pipeline-authoring issue):
+    1. `run_bronze`, `run_silver`, `run_gold`, `gold_dim_product`, `util_logging` were missing `default_lakehouse` GUID + `default_lakehouse_workspace_id` in notebook metadata (only `init_runs_log`/`seed_metadata` had it right) — Spark had no attached lakehouse context at all. Fixed by adding the real GUIDs.
+    2. Three-part table names (`lh_orchestration.config.table_metadata`) don't resolve across workspaces in Fabric Spark — only same-workspace. Switched those reads (`run_bronze`, `run_silver`, `run_gold`) and the `pipeline_runs` write (`util_logging`) to ABFSS paths instead.
+    3. `mssparkutils.notebook.run(timeoutSeconds=900, ...)` — this runtime doesn't accept `timeoutSeconds` as a keyword; fixed to positional `run(name, 900, args)`.
+    4. Fabric disallows `notebook.run()` calling a child notebook with a different default lakehouse than the caller. `run_gold`'s default was `lh_orchestration`, `gold_dim_product`'s is `lh_gold` — realigned `run_gold`'s default lakehouse to `lh_gold` (and its `table_metadata` read to ABFSS, since two-part name no longer resolves).
 - [ ] **3.3** Phase 3 artifacts removed from `fabric/engineering/` (4 items), `deploy.py --unpublish-orphans` run against engineering workspace, items gone from `ws-grocery-engineering-dev`
 
 ---
