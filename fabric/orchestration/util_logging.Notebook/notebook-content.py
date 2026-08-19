@@ -40,6 +40,7 @@ RUNS_LOG_PATH = (
     "abfss://832c353e-3226-4e92-9ea7-66ffa2f4660e@onelake.dfs.fabric.microsoft.com/"
     "a2f1aba8-3d5e-4482-9dce-475ef81832fa/Tables/runs/pipeline_runs"
 )
+# Bumped when the pipeline_runs schema changes, so old rows can be told apart from new.
 METADATA_VERSION = "v1"
 
 

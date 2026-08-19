@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-15
 
-## Status: IN PROGRESS — Step 4.1 (end-to-end verification after cleanup)
+## Status: IN PROGRESS — Step 4.4 (tag v0.3.5-orchestration-platform)
 
 Spec: `PHASE_3_5_SPEC_V2.md`
 Branch: `feature/phase-3.5-platform`
@@ -68,9 +68,9 @@ Branch: `feature/phase-3.5-platform`
 
 ## Section 4 — Verify, tag, document
 
-- [ ] **4.1** End-to-end verification after cleanup — pipeline green, Gold output matches Phase 3 numbers
-- [ ] **4.2** Round-trip Git sync verified — comment added to `util_logging` locally, deployed, visible in Fabric
-- [ ] **4.3** README Architecture section updated with deployment platform + orchestration platform descriptions
+- [x] **4.1** End-to-end verification after cleanup — pipeline green, Gold output matches Phase 3 numbers ✅ — re-ran `pl_grocery_medallion` after §3.3 cleanup, run `b6123039-...` Completed; bronze/silver/gold each re-verified at 2000 rows, matching Phase 3's baseline exactly (`PHASE3_PROGRESS.md` Steps 7–9)
+- [x] **4.2** Round-trip Git sync verified — comment added to `util_logging` locally, deployed, visible in Fabric ✅ — added a comment above `METADATA_VERSION`, deployed via `deploy.py`, then fetched the live definition via Fabric's `getDefinition` API and confirmed the exact comment text is present in the deployed notebook
+- [x] **4.3** README Architecture section updated with deployment platform + orchestration platform descriptions ✅
 - [ ] **4.4** Tagged `v0.3.5-orchestration-platform`
 
 ---

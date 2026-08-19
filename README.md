@@ -16,6 +16,8 @@ This project generates synthetic transactional data for a fictional Australian g
 - **Silver layer:** Cleaned, conformed, and enriched dimension and fact tables; deduplication and schema enforcement via Great Expectations.
 - **Gold layer:** Star-schema semantic model optimised for Power BI; surrogate keys, slowly-changing dimensions, and pre-aggregated measures.
 - **CI/CD:** GitHub Actions runs linting, type-checking, and tests on every push; Fabric artefacts are deployed via GitHub integration (Phase 7).
+- **Deployment platform:** Fabric artefacts are deployed from Git with `fabric-cicd` (`deploy.py`), authenticating as a dedicated Entra service principal; per-workspace GUIDs and cross-environment substitutions live in `config/fabric-ids.yaml` and `parameter.yml`.
+- **Orchestration platform:** A dedicated `ws-grocery-orchestration-dev` workspace runs `pl_grocery_medallion`, a metadata-driven pipeline (SeedMetadata → BronzeDims → SilverDims → GoldDims). A `config.table_metadata` table drives generic Bronze/Silver/Gold runner notebooks against any table in a group, and each layer logs start/success/failure to a shared `runs.pipeline_runs` table for observability.
 - **Data quality:** Great Expectations expectation suites are shared between the local generator pipeline and Fabric notebooks, ensuring consistent validation across environments.
 - **Governance:** Microsoft Purview catalogue and lineage (Phase 6).
 - **Forecasting:** Containerised demand forecasting model for fresh produce, trained and deployed via Azure AI Foundry (Phase 9).
