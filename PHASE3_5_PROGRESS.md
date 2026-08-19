@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-15
 
-## Status: IN PROGRESS — Step 3.3 (remove Phase 3 artifacts from fabric/engineering/)
+## Status: IN PROGRESS — Step 4.1 (end-to-end verification after cleanup)
 
 Spec: `PHASE_3_5_SPEC_V2.md`
 Branch: `feature/phase-3.5-platform`
@@ -62,7 +62,7 @@ Branch: `feature/phase-3.5-platform`
     2. Three-part table names (`lh_orchestration.config.table_metadata`) don't resolve across workspaces in Fabric Spark — only same-workspace. Switched those reads (`run_bronze`, `run_silver`, `run_gold`) and the `pipeline_runs` write (`util_logging`) to ABFSS paths instead.
     3. `mssparkutils.notebook.run(timeoutSeconds=900, ...)` — this runtime doesn't accept `timeoutSeconds` as a keyword; fixed to positional `run(name, 900, args)`.
     4. Fabric disallows `notebook.run()` calling a child notebook with a different default lakehouse than the caller. `run_gold`'s default was `lh_orchestration`, `gold_dim_product`'s is `lh_gold` — realigned `run_gold`'s default lakehouse to `lh_gold` (and its `table_metadata` read to ABFSS, since two-part name no longer resolves).
-- [ ] **3.3** Phase 3 artifacts removed from `fabric/engineering/` (4 items), `deploy.py --unpublish-orphans` run against engineering workspace, items gone from `ws-grocery-engineering-dev`
+- [x] **3.3** Phase 3 artifacts removed from `fabric/engineering/` (4 items), `deploy.py --unpublish-orphans` run against engineering workspace, items gone from `ws-grocery-engineering-dev` ✅ — verified nothing else in the repo referenced these items and `pl_dim_product` had no active schedule before removing; confirmed `ws-grocery-engineering-dev` has 0 items after unpublish
 
 ---
 
