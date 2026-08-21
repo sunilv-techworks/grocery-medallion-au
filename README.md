@@ -25,6 +25,14 @@ This project generates synthetic transactional data for a fictional Australian g
 
 An architecture diagram lives at `docs/images/architecture.png` (placeholder — to be added in Phase 4).
 
+## Working with AI
+
+This project is built collaboratively with an AI assistant — pairing on
+design, implementation, and debugging rather than one-shot code generation.
+The judgement calls behind it (tradeoffs considered, what was chosen and why,
+what was deliberately deferred) are tracked in
+[`docs/decision-register.md`](docs/decision-register.md).
+
 ## Repository layout
 
 ```
