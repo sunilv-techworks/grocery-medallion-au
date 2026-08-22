@@ -183,7 +183,7 @@ the consumer-specific layer, so projection and business rules belong there.
 
 ## DR-008 — Move transform notebooks from `ws-grocery-orchestration-dev` to `ws-grocery-engineering-dev`
 
-**Status:** Backlog · **Date raised:** 2026-08-22
+**Status:** Decided · **Date raised:** 2026-08-22 · **Implemented:** 2026-08-22
 
 **Issue:** All 5 transform notebooks (`run_bronze`, `run_silver`, `run_gold`,
 `gold_dim_product`, `util_logging`) live in the orchestration workspace
@@ -196,19 +196,28 @@ sat empty since DR-004 retired the old Phase 3 items from it.
 2. Move the 5 transform notebooks to `engineering`, leaving only the
    pipeline and the control-plane lakehouse in `orchestration`.
 
-**Decision:** Option 2 — **not yet implemented.**
+**Decision:** Option 2 — implemented.
 
 **Rationale:** "Orchestration" should mean coordination plus metadata;
 "engineering" should hold the actual transform logic. The current layout
 grew organically during Phase 3.5 rather than by deliberate design.
 
-**Rationale for deferring:** `env_grocery_orchestration` (with the
-`grocery_gen` wheel) is orchestration's workspace-level default Spark
-environment, not a per-notebook attachment — moving the notebooks means
-provisioning an equivalent environment in `engineering` first, re-pointing
-the pipeline to new notebook IDs, and retiring the orchestration copies.
-Comparable scope to the Phase 3 artifact retirement in DR-004.
+**Correction to the original wrinkle:** before implementing, checked whether
+any of the 5 moving notebooks actually import `grocery_gen` (`env_grocery_orchestration`'s
+only reason to exist beyond Spark compute sizing) — none do; only
+`seed_metadata` does, and it stays in `orchestration`. So no environment
+needed to be provisioned in `engineering` at all — the notebooks run on its
+default runtime. The move ended up being: relocate the 5 notebook folders,
+deploy to `engineering` (new item GUIDs), re-point the pipeline's
+`BronzeDims`/`SilverDims`/`GoldDims` `TridentNotebook` activities to the new
+notebook IDs with an explicit cross-workspace `workspaceId` (Fabric supports
+this natively — no notebook code changes needed, since `%run` and
+`mssparkutils.notebook.run()` still resolve by name within the caller's own
+workspace, and all 5 moved together), then retire the orchestration copies
+via `deploy.py --unpublish-orphans` after confirming no other repo item
+referenced their old GUIDs. Verified end-to-end both before and after
+retiring the old copies: pipeline green, 2000 rows at every layer.
 
-**Open question:** sequencing between DR-005/006/007 (the layer reshape) and
-DR-008 (the workspace move) hasn't been decided — reshape-then-move vs.
-move-then-reshape.
+**Sequencing (resolved):** did the workspace move first, deferring the
+Bronze/Silver/Gold reshape (DR-005/006/007) to happen in the notebooks'
+final home in `engineering`.
