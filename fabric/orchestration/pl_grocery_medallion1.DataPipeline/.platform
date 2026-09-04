@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "DataPipeline",
-    "displayName": "pl_grocery_medallion"
+    "displayName": "pl_grocery_medallion1"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "ed3e269f-bd7b-4abd-8ef6-3b168401c700"
+    "logicalId": "c827101a-c6e6-bc14-4718-3a93f4785488"
   }
 }
