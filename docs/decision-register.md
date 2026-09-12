@@ -110,7 +110,7 @@ was safe both times.
 
 ## DR-005 — Reshape Bronze/Silver/Gold so each layer actually means something
 
-**Status:** Backlog · **Date raised:** 2026-08-22
+**Status:** Decided · **Date raised:** 2026-08-22 · **Implemented:** 2026-09-12
 
 **Issue:** The generator emits `dim_product.parquet` already
 dimension-shaped, and it lands in Bronze unchanged. Today, Bronze, Silver,
@@ -124,17 +124,36 @@ columns — not by genuine raw → conformed → dimensional transformation.
    an actual Great Expectations checkpoint; Gold does the real
    dimension-building (surrogate keys, derived business columns).
 
-**Decision:** Option 2, agreed — **not yet implemented.**
+**Decision:** Option 2 — implemented.
 
-**Rationale for deferring:** Genuine scope increase — needs generator
-changes and a real GX suite, not a config tweak. Parked alongside DR-006
-through DR-008 as the Phase 4 body of work.
+**Rationale:** Genuine scope increase — needs generator changes and a real
+GX suite, not a config tweak. Parked alongside DR-006 through DR-008 as the
+Phase 4 body of work.
+
+**Implementation note:** `grocery_gen.dimensions.products.to_raw_product_rows`
+renames `ProductRow` to source-shaped columns (`sku_id`, `prod_desc`, ...)
+and deterministically injects a null-key row and a duplicate row per
+`messy_rate` (default 1%) — real, reproducible quality issues for Silver to
+catch rather than a cosmetic rename. Silver's primary-key conformance
+(not-null then uniqueness) now runs as an actual GX `ExpectationSuite`
+checkpoint — `packages/grocery-gen/src/grocery_gen/quality/silver.py` — in
+place of the hand-rolled PySpark asserts it replaces. `fabric/engineering/
+util_dq.Notebook` mirrors the same two-expectation checkpoint for the Fabric
+Silver notebook (Spark → pandas → GX → back to Spark, since the engineering
+workspace has no environment to install this repo's wheel — DR-008 — and at
+this project's row counts a driver-side collect is a reasonable trade-off
+for a real checkpoint over hand-rolled asserts). Verified locally: 40
+pytest tests pass, including `validate_primary_key` run directly against
+`to_raw_product_rows`' deliberately-messy output. **Not yet verified via a
+live Fabric pipeline run** — the notebook's GX/pandas path can only be
+exercised inside an actual Fabric Spark session, unlike the DR-008 move,
+which was confirmed end-to-end.
 
 ---
 
 ## DR-006 — Gold `dim_product` sourced from two tables (product + category), not one
 
-**Status:** Backlog · **Date raised:** 2026-08-22
+**Status:** Decided · **Date raised:** 2026-08-22 · **Implemented:** 2026-09-12
 
 **Issue:** Wanted a second source feeding Gold, to demonstrate multi-source
 dimension building rather than a single straight-through table.
@@ -144,7 +163,7 @@ dimension building rather than a single straight-through table.
    flag.
 2. Product + image/URL data.
 
-**Decision:** Option 1 — **not yet implemented.**
+**Decision:** Option 1 — implemented.
 
 **Rationale:** Category/department master data realistically comes from a
 separate source system in retail, so it's a legitimate reason for two Bronze
@@ -155,11 +174,21 @@ Option 2 was rejected — no business logic, no DQ story, and images are
 normally referenced by ID from blob storage rather than joined from a source
 table in a real warehouse.
 
+**Implementation note:** New `grocery_gen.dimensions.categories.generate_categories`
+derives one row per `(department, category)` from the same `TAXONOMY` source
+of truth the product generator already uses, carrying `gst_exempt`; exposed
+via `grocery-gen categories` and landed as `category_master.parquet`.
+`gold_dim_product.Notebook` joins `conformed.product` to `conformed.category`
+on `(department, category)`, adds `product_sk`, and fails the run if any
+product has no matching category (see DR-007 for why that check lives here
+rather than in Silver). Verified locally via the generator's tests; not yet
+verified via a live Fabric pipeline run (see DR-005's implementation note).
+
 ---
 
 ## DR-007 — Silver stays entity-complete; join, column selection, and referential-integrity checks all happen at the Gold join
 
-**Status:** Backlog · **Date raised:** 2026-08-22
+**Status:** Decided · **Date raised:** 2026-08-22 · **Implemented:** 2026-09-12
 
 **Issue:** With two Silver sources (`conformed.product`, `conformed.category`)
 feeding one Gold table, where should columns be narrowed, the join happen,
@@ -173,11 +202,19 @@ caught?
    join, column projection, derived columns, and the referential-integrity
    check at Gold.
 
-**Decision:** Option 2 — **not yet implemented.**
+**Decision:** Option 2 — implemented.
 
 **Rationale:** Keeps Silver reusable as a conformed source of truth for any
 future consumer, rather than pre-shaped for this one Gold output. Gold is
 the consumer-specific layer, so projection and business rules belong there.
+
+**Implementation note:** `run_silver.Notebook` now applies each entity's own
+`column_mapping` from `config.table_metadata` (raw → conformed names,
+identity if absent) and runs the DR-005 GX primary-key checkpoint — nothing
+entity-specific, no join. `gold_dim_product.Notebook` owns the
+`product`+`category` join, column projection, and the referential-integrity
+check (see DR-006). Verified locally; not yet verified via a live Fabric
+pipeline run (see DR-005's implementation note).
 
 ---
 

@@ -499,3 +499,79 @@ def generate_products(n: int = 2000, seed: int = 42) -> list[ProductRow]:
 
     rows.sort(key=lambda r: r.product_id)
     return rows
+
+
+class RawProductRow(BaseModel):
+    """Source-shaped product extract, as a raw upstream system would hand it
+    over — different column names than the conformed ProductRow, and a
+    deliberate, deterministic sprinkling of the quality issues a real Bronze
+    landing would actually have (missing keys, duplicate rows). This is what
+    lands in Bronze; ProductRow (via generate_products) is the clean ground
+    truth Silver reconstructs from it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    sku_id: str | None
+    prod_desc: str
+    dept_name: str
+    cat_name: str
+    subcat_name: str
+    brand_name: str
+    is_private_label: bool
+    uom: str
+    pack_qty: float
+    cost_price: float
+    sell_price: float
+    gst_flag: bool
+    shelf_life_d: int | None
+    peak_months: list[int] | None
+    season_vec: list[float]
+    wastage_pct: float | None
+    supplier_code: str
+
+
+def _to_raw_row(row: ProductRow) -> RawProductRow:
+    return RawProductRow(
+        sku_id=row.product_id,
+        prod_desc=row.name,
+        dept_name=row.department,
+        cat_name=row.category,
+        subcat_name=row.subcategory,
+        brand_name=row.brand,
+        is_private_label=row.is_private_label,
+        uom=row.unit_of_measure,
+        pack_qty=row.pack_size,
+        cost_price=row.cost_price_aud,
+        sell_price=row.retail_price_aud,
+        gst_flag=row.gst_applicable,
+        shelf_life_d=row.shelf_life_days,
+        peak_months=row.peak_season_months,
+        season_vec=row.seasonality_vector,
+        wastage_pct=row.wastage_rate_baseline,
+        supplier_code=row.supplier_id,
+    )
+
+
+def to_raw_product_rows(
+    rows: list[ProductRow], seed: int = 42, messy_rate: float = 0.01
+) -> list[RawProductRow]:
+    """Rename to source-shaped columns and inject deterministic quality
+    issues: a null key on ~messy_rate of rows, and an equal share of exact
+    duplicate rows appended. Same seed always produces the same issues, so
+    Silver's DQ framework has something real — and reproducible — to catch.
+    """
+    rng = np.random.default_rng(seed * 7 + 1)
+    raw_rows = [_to_raw_row(r) for r in rows]
+
+    n = len(raw_rows)
+    n_messy = max(1, int(n * messy_rate))
+
+    null_key_idx = set(rng.choice(n, size=n_messy, replace=False).tolist())
+    for idx in null_key_idx:
+        raw_rows[idx] = raw_rows[idx].model_copy(update={"sku_id": None})
+
+    dup_source_idx = rng.choice(n, size=n_messy, replace=False).tolist()
+    duplicates = [raw_rows[idx] for idx in dup_source_idx]
+
+    return raw_rows + duplicates

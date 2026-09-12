@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "util_dq"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "7f3a5f2b-79fb-4ea1-9a24-b5129581f2c9"
+  }
+}

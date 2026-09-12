@@ -41,11 +41,24 @@
 
 # CELL ********************
 
+%run util_dq
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 """Generic Silver runner.
 
-Reads Bronze, applies DQ gates, writes Silver. Branches on the scd2 flag
-in metadata. Phase 3.5 only exercises the non-SCD2 path; Phase 4c will
-implement the SCD2 merge logic.
+Reads Bronze (raw schema), applies the entity's column_mapping (raw column
+names -> conformed names — identity if the table has none), runs the shared
+DQ framework (util_dq) against primary_key, and writes conformed.<name>.
+Branches on the scd2 flag in metadata. Phase 3.5 only exercises the
+non-SCD2 path; Phase 4c will implement the SCD2 merge logic.
 """
 
 from pyspark.sql.functions import col, current_timestamp
@@ -67,9 +80,16 @@ print(f"Silver runner: group={group}, run_id={run_id}, "
       f"tables={[t['name'] for t in tables_to_process]}")
 
 
+def apply_column_mapping(df, table):
+    mapping = dict(table["column_mapping"]) if table["column_mapping"] else {}
+    if not mapping:
+        return df
+    return df.select([col(c).alias(mapping.get(c, c)) for c in df.columns])
+
+
 def silver_transform_non_scd2(df, table):
     return (
-        df
+        apply_column_mapping(df, table)
         .drop("_source_file", "_ingestion_batch_id", "_ingested_at_utc")
         .withColumn("_silver_loaded_at_utc", current_timestamp())
     )
@@ -86,8 +106,8 @@ for table in tables_to_process:
     started_at = log_run_start(run_id, activity_id, table["name"], "silver")
 
     try:
-        bronze_table = f"lh_bronze.{table['domain']}.{table['name']}"
-        silver_table = f"{table['domain']}.{table['name']}"  # writes to default lh_silver
+        bronze_table = f"lh_bronze.raw.{table['name']}"
+        silver_table = f"conformed.{table['name']}"  # writes to default lh_silver
 
         df = spark.table(bronze_table)
         df_silver = (
@@ -95,12 +115,9 @@ for table in tables_to_process:
             else silver_transform_non_scd2(df, table)
         )
 
-        total = df_silver.count()
         pk_cols = list(table["primary_key"])
-        nulls = df_silver.filter(col(pk_cols[0]).isNull()).count()
-        duplicates = total - df_silver.select(*pk_cols).distinct().count()
-        assert nulls == 0, f"{table['name']}: {nulls} null primary key values"
-        assert duplicates == 0, f"{table['name']}: {duplicates} duplicate keys"
+        df_silver = run_primary_key_checks(df_silver, pk_cols, table["name"])
+        total = df_silver.count()
 
         (
             df_silver.write

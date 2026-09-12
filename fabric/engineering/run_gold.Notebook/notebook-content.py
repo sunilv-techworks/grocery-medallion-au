@@ -36,9 +36,12 @@
 
 """Gold dispatcher.
 
-For each table in the requested group, invokes the per-table Gold notebook
-via mssparkutils.notebook.run(). Per-table notebooks must follow the naming
-convention gold_<table_name>.
+For each output in the requested group, invokes its Gold notebook via
+mssparkutils.notebook.run(). Dispatched from config.gold_metadata — a
+separate table from config.table_metadata because Gold is a different
+grain: one Gold output can consume multiple Silver sources, and one Silver
+source can feed multiple Gold outputs (many-to-many), which doesn't fit as
+a column on the entity-grain table_metadata.
 """
 
 # === Parameters (overridden by pipeline) ===
@@ -46,26 +49,26 @@ group = "conformed_dims"
 run_id = new_run_id()
 
 # Cross-workspace: three-part names only resolve within a single workspace,
-# so table_metadata (in lh_orchestration) is read via its ABFSS path. Default
+# so gold_metadata (in lh_orchestration) is read via its ABFSS path. Default
 # lakehouse here is lh_gold — must match gold_dim_product's default, since
 # mssparkutils.notebook.run() disallows calling a notebook with a different
 # default lakehouse than the caller.
-TABLE_METADATA_PATH = (
+GOLD_METADATA_PATH = (
     "abfss://832c353e-3226-4e92-9ea7-66ffa2f4660e@onelake.dfs.fabric.microsoft.com/"
-    "a2f1aba8-3d5e-4482-9dce-475ef81832fa/Tables/config/table_metadata"
+    "a2f1aba8-3d5e-4482-9dce-475ef81832fa/Tables/config/gold_metadata"
 )
-all_metadata = spark.read.format("delta").load(TABLE_METADATA_PATH).collect()
-tables_to_process = [row for row in all_metadata if row["group"] == group]
+all_metadata = spark.read.format("delta").load(GOLD_METADATA_PATH).collect()
+outputs_to_process = [row for row in all_metadata if row["group"] == group]
 
 print(f"Gold dispatcher: group={group}, run_id={run_id}, "
-      f"tables={[t['name'] for t in tables_to_process]}")
+      f"outputs={[t['name'] for t in outputs_to_process]}")
 
-for table in tables_to_process:
+for table in outputs_to_process:
     activity_id = new_activity_id()
     started_at = log_run_start(run_id, activity_id, table["name"], "gold")
 
     try:
-        notebook_name = f"gold_{table['name']}"
+        notebook_name = table["gold_notebook"]
         result = mssparkutils.notebook.run(
             notebook_name,
             900,

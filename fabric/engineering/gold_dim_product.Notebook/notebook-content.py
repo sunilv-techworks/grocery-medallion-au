@@ -28,22 +28,43 @@
 
 """Gold dim_product — bespoke business logic.
 
-Reads lh_silver.conformed.dim_product, derives analytics-friendly columns,
+Two Silver sources (DR-006/DR-007): joins product to category on
+(department, category) to pull through gst_exempt, then does the
+column selection, surrogate key, and derived columns that make this
+actually a dimension rather than a straight-through copy of Silver.
+
+Reads lh_silver.conformed.product + lh_silver.conformed.category,
 writes lh_gold.conformed.dim_product.
 
 Returns: row count as the notebook exit value (used by run_gold dispatcher).
 """
 
-from pyspark.sql.functions import col, size, when
+from pyspark.sql.functions import col, monotonically_increasing_id, size, when
 
-SOURCE_TABLE = "lh_silver.conformed.dim_product"
+PRODUCT_TABLE = "lh_silver.conformed.product"
+CATEGORY_TABLE = "lh_silver.conformed.category"
 TARGET_TABLE = "conformed.dim_product"  # default lakehouse = lh_gold
 
-df = spark.table(SOURCE_TABLE)
+product = spark.table(PRODUCT_TABLE)
+category = spark.table(CATEGORY_TABLE)
+
+joined = product.join(category, on=["department", "category"], how="left")
+
+# Referential integrity: product and category both derive from the same
+# TAXONOMY source of truth in the generator, so every product's category
+# should always match — an unmatched row here is a real bug, not expected
+# messiness, so it fails the run rather than being silently dropped.
+unmatched = joined.filter(col("gst_exempt").isNull()).count()
+if unmatched:
+    raise ValueError(
+        f"{unmatched} product row(s) have no matching category — "
+        "referential integrity violation between conformed.product and conformed.category"
+    )
 
 df_gold = (
-    df
+    joined
     .drop("_silver_loaded_at_utc")
+    .withColumn("product_sk", monotonically_increasing_id())
     .withColumn("is_perishable", col("shelf_life_days").isNotNull())
     .withColumn(
         "is_seasonal",

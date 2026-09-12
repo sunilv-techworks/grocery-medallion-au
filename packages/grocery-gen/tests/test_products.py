@@ -4,7 +4,11 @@ from collections import Counter
 
 import pytest
 
-from grocery_gen.dimensions.products import ProductRow, generate_products
+from grocery_gen.dimensions.products import (
+    ProductRow,
+    generate_products,
+    to_raw_product_rows,
+)
 from grocery_gen.reference.taxonomy import SKU_ALLOCATION
 
 
@@ -106,3 +110,26 @@ def test_scales_to_arbitrary_count(count: int) -> None:
     products = generate_products(n=count, seed=42)
     assert len(products) == count
     assert all(isinstance(p, ProductRow) for p in products)
+
+
+def test_raw_rows_reproducible() -> None:
+    products = generate_products(n=500, seed=42)
+    a = to_raw_product_rows(products, seed=42)
+    b = to_raw_product_rows(products, seed=42)
+    assert a == b
+
+
+def test_raw_rows_have_null_keys_and_duplicates() -> None:
+    products = generate_products(n=500, seed=42)
+    raw = to_raw_product_rows(products, seed=42)
+    assert len(raw) > len(products)  # duplicates appended
+    assert sum(1 for r in raw if r.sku_id is None) > 0
+
+
+def test_raw_rows_clean_ones_match_source_by_position() -> None:
+    products = generate_products(n=50, seed=42)
+    raw = to_raw_product_rows(products, seed=42, messy_rate=0.0)
+    # messy_rate=0.0 still floors to 1 messy row (max(1, ...)) — check the rest line up
+    for source, row in zip(products, raw[: len(products)], strict=True):
+        assert row.prod_desc == source.name
+        assert row.dept_name == source.department

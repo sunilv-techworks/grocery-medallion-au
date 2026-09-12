@@ -70,7 +70,7 @@ tables_to_process = [
 print(f"Bronze runner: group={group}, run_id={run_id}, "
       f"tables={[t['name'] for t in tables_to_process]}")
 
-spark.sql("CREATE SCHEMA IF NOT EXISTS conformed")
+spark.sql("CREATE SCHEMA IF NOT EXISTS raw")
 
 for table in tables_to_process:
     activity_id = new_activity_id()
@@ -78,7 +78,7 @@ for table in tables_to_process:
 
     try:
         landing_path = table["bronze_landing_pattern"]
-        bronze_table = f"{table['domain']}.{table['name']}"  # writes to default lh_bronze
+        bronze_table = f"raw.{table['name']}"  # writes to default lh_bronze
 
         # Files/ resolves against the default lakehouse (lh_bronze)
         df_raw = spark.read.parquet(landing_path)

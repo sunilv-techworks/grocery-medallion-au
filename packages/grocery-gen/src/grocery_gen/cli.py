@@ -46,15 +46,31 @@ def products(
     seed: int = typer.Option(42, "--seed", help="Random seed"),
     output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
 ) -> None:
-    """Generate dim_product and write it to Parquet."""
-    from grocery_gen.dimensions.products import generate_products
+    """Generate the raw product_catalog Bronze extract and write it to Parquet."""
+    from grocery_gen.dimensions.products import generate_products, to_raw_product_rows
     from grocery_gen.writers.parquet import write_rows
 
     rprint(f"[cyan]Generating[/cyan] {count} products with seed={seed}...")
     rows = generate_products(n=count, seed=seed)
-    output_path = output_dir / "dim_product.parquet"
+    raw_rows = to_raw_product_rows(rows, seed=seed)
+    output_path = output_dir / "product_catalog.parquet"
+    written = write_rows(raw_rows, output_path)
+    rprint(f"[green]Wrote[/green] {len(raw_rows)} product_catalog rows to {written}")
+
+
+@app.command()
+def categories(
+    output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
+) -> None:
+    """Generate the category_master Bronze extract and write it to Parquet."""
+    from grocery_gen.dimensions.categories import generate_categories
+    from grocery_gen.writers.parquet import write_rows
+
+    rprint("[cyan]Generating[/cyan] category master...")
+    rows = generate_categories()
+    output_path = output_dir / "category_master.parquet"
     written = write_rows(rows, output_path)
-    rprint(f"[green]Wrote[/green] {len(rows)} products to {written}")
+    rprint(f"[green]Wrote[/green] {len(rows)} categories to {written}")
 
 
 if __name__ == "__main__":
