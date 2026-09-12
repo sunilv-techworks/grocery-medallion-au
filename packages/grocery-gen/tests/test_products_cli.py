@@ -35,3 +35,17 @@ def test_categories_command_writes_parquet(tmp_path: Path) -> None:
     assert len(frame) > 0
     assert {"department", "category", "gst_exempt"}.issubset(frame.columns)
     assert not frame.duplicated(subset=["department", "category"]).any()
+
+
+def test_calendar_command_writes_parquet(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        ["calendar", "--start", "2024-01-01", "--end", "2024-01-31", "--out", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.stdout
+    output = tmp_path / "dim_calendar.parquet"
+    assert output.exists()
+    frame = pd.read_parquet(output)
+    assert len(frame) == 31
+    assert {"date_key", "fiscal_year", "is_public_holiday"}.issubset(frame.columns)
+    assert frame["date_key"].is_unique

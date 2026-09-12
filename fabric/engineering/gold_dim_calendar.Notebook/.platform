@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "gold_dim_calendar"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "28eea0cd-2d95-4d6f-af89-e40a8b165c24"
+  }
+}

@@ -258,3 +258,45 @@ retiring the old copies: pipeline green, 2000 rows at every layer.
 **Sequencing (resolved):** did the workspace move first, deferring the
 Bronze/Silver/Gold reshape (DR-005/006/007) to happen in the notebooks'
 final home in `engineering`.
+
+---
+
+## DR-009 — `dim_calendar` is generated directly at Gold, skipping Bronze/Silver
+
+**Status:** Decided · **Date raised:** 2026-09-12 · **Implemented:** 2026-09-12
+
+**Issue:** `dim_product` and `category` both land as Bronze extracts and get
+conformed through Silver before Gold builds the dimension. Does `dim_calendar`
+— the next Phase 4 entity — follow the same three-layer path?
+
+**Options considered:**
+1. Force it through the same Bronze → Silver → Gold path as the other
+   entities, for architectural consistency: generate a raw date extract,
+   land it, conform it, then dimension-build it.
+2. Generate it directly as a Gold output, with no Bronze or Silver step.
+
+**Decision:** Option 2 — implemented.
+
+**Rationale:** A date dimension isn't extracted from any upstream system —
+there's no real "raw" shape for it to arrive in, no source-system quality
+issues to clean in Silver, nothing for DR-005's GX primary-key checkpoint to
+meaningfully catch (a generated date spine can't have a null or duplicate
+date by construction). Forcing it through Bronze/Silver would mean inventing
+fake raw messiness just to justify the layers, which is the same trap DR-006
+rejected for the product+image option (no real business/DQ story). Real
+warehouses commonly special-case date dimensions this way. `sources: []` in
+`config.gold_metadata` reflects this at the metadata level; `run_gold`'s
+dispatcher never inspects `sources` (only `gold_notebook`), so this needed
+no dispatcher change.
+
+**Implementation note:** `grocery_gen.dimensions.calendar.generate_calendar_dates`
+is the canonical spec — a date spine with AU fiscal year/quarter (year
+starts 1 July, named by the year it ends in) and national public holidays
+via the `holidays` package (no state subdivision, since there's no `dim_store`
+yet to vary by state). `fabric/engineering/gold_dim_calendar.Notebook` mirrors
+this same logic natively in Spark (date arithmetic + `%pip install holidays`
+for the same holiday calendar), registered in `config.gold_metadata` and
+picked up automatically by the existing `conformed_dims` pipeline group — no
+pipeline changes needed. Verified locally: pytest suite covers the fiscal-year
+boundary and known public holidays. Not yet verified via a live Fabric
+pipeline run.

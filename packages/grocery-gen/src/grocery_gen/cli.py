@@ -73,5 +73,24 @@ def categories(
     rprint(f"[green]Wrote[/green] {len(rows)} categories to {written}")
 
 
+@app.command()
+def calendar(
+    start: str = typer.Option("2024-01-01", "--start", help="Start date (YYYY-MM-DD)"),
+    end: str = typer.Option("2026-12-31", "--end", help="End date (YYYY-MM-DD)"),
+    output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
+) -> None:
+    """Generate the dim_calendar date dimension and write it to Parquet."""
+    from grocery_gen.dimensions.calendar import generate_calendar_dates
+    from grocery_gen.writers.parquet import write_rows
+
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    rprint(f"[cyan]Generating[/cyan] calendar from {start_date} to {end_date}...")
+    rows = generate_calendar_dates(start_date, end_date)
+    output_path = output_dir / "dim_calendar.parquet"
+    written = write_rows(rows, output_path)
+    rprint(f"[green]Wrote[/green] {len(rows)} calendar rows to {written}")
+
+
 if __name__ == "__main__":
     app()

@@ -91,7 +91,7 @@ TABLES = [
         "primary_key": ["department", "category"],
         "grain_description": "One row per (department, category); reference data, no standalone Gold output",
     },
-    # Phase 4 will add dim_store, dim_customer, dim_calendar, fact_sales, fact_wastage here.
+    # Phase 4 will add dim_store, dim_customer, fact_sales, fact_wastage here.
 ]
 
 # === GOLD OUTPUT DEFINITIONS — source of truth ===
@@ -103,6 +103,13 @@ GOLD_TABLES = [
         "sources": ["product", "category"],
         "gold_notebook": "gold_dim_product",
         "grain_description": "One row per product SKU, enriched with category attributes (gst_exempt)",
+    },
+    {
+        "name": "dim_calendar",
+        "group": "conformed_dims",
+        "sources": [],
+        "gold_notebook": "gold_dim_calendar",
+        "grain_description": "One row per date; generated directly (no Bronze/Silver source — see DR-009)",
     },
 ]
 
