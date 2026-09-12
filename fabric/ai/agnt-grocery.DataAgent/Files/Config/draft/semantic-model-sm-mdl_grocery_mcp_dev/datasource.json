@@ -1,0 +1,237 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataSource/1.0.0/schema.json",
+  "artifactId": "6061bd99-4ea7-4d80-9062-44a2d41fc782",
+  "workspaceId": "a8ad9315-1e3f-4cda-b0dc-2c684e837141",
+  "dataSourceInstructions": null,
+  "displayName": "sm-mdl_grocery_mcp_dev",
+  "type": "semantic_model",
+  "userDescription": null,
+  "metadata": null,
+  "elements": [
+    {
+      "id": "abcc0e24-1fc1-4ae0-9c8f-98a0f1d25cad",
+      "is_selected": true,
+      "display_name": "dim_store",
+      "type": "semantic_model.table",
+      "description": null,
+      "children": [
+        {
+          "id": "4170af00-6eb7-4026-bc58-8229287bce76",
+          "is_selected": true,
+          "display_name": "store_id",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "07485f72-809f-4eab-8585-350287809c70",
+          "is_selected": true,
+          "display_name": "store_name",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "4f47df86-7ba9-4583-9b9f-a6b1170c6868",
+          "is_selected": true,
+          "display_name": "state",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "1793ecf4-ac76-405b-890f-ec5d6616bce4",
+          "is_selected": true,
+          "display_name": "region",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "e55f9228-17a3-46bd-985b-ac2484f60634",
+          "is_selected": true,
+          "display_name": "store_format",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "af872605-21a5-46a3-9dce-7ed23394373c",
+      "is_selected": true,
+      "display_name": "dim_calendar",
+      "type": "semantic_model.table",
+      "description": null,
+      "children": [
+        {
+          "id": "72c464ed-8022-4412-9828-1ea288cdf350",
+          "is_selected": true,
+          "display_name": "date_key",
+          "type": "semantic_model.column",
+          "data_type": "DateTime",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "3de87473-fbfd-4649-95e9-5e07adb6a336",
+          "is_selected": true,
+          "display_name": "year",
+          "type": "semantic_model.column",
+          "data_type": "Int64",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "48d58b02-ec41-48f7-a09a-62a12345eae6",
+          "is_selected": true,
+          "display_name": "month",
+          "type": "semantic_model.column",
+          "data_type": "Int64",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "d927e5f2-bde7-4d37-935e-b0ef0b39c7e9",
+          "is_selected": true,
+          "display_name": "month_name",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "47fda6a3-295a-43e4-b12c-4c387cd64e6f",
+          "is_selected": true,
+          "display_name": "day_of_week",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "a2f61d6e-557f-4a40-bffc-6fdd9dab659c",
+          "is_selected": true,
+          "display_name": "is_weekend",
+          "type": "semantic_model.column",
+          "data_type": "Boolean",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "5b285149-1997-4917-8cb1-602c2236ba86",
+          "is_selected": true,
+          "display_name": "financial_year",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "817503d8-3ae1-4fb0-9e3b-3523f8329861",
+      "is_selected": true,
+      "display_name": "fact_sales",
+      "type": "semantic_model.table",
+      "description": null,
+      "children": [
+        {
+          "id": "b76b03fc-4783-4584-8eda-a9faff30b8f1",
+          "is_selected": true,
+          "display_name": "sale_id",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "e6982ba2-3122-42d4-a6a8-a22c8f798156",
+          "is_selected": true,
+          "display_name": "store_id",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "48f0c378-68a3-4b28-b0a2-657d47f74cc7",
+          "is_selected": true,
+          "display_name": "product_id",
+          "type": "semantic_model.column",
+          "data_type": "String",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "065c4740-581d-4347-b982-afdd7e2d2ab3",
+          "is_selected": true,
+          "display_name": "units_sold",
+          "type": "semantic_model.column",
+          "data_type": "Int64",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "1f59116f-4cd3-45f0-8be9-aaed2fc3ff63",
+          "is_selected": true,
+          "display_name": "sales_amount_aud",
+          "type": "semantic_model.column",
+          "data_type": "Double",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "8bcfec6e-c9c9-438e-a72c-af1b43e5c42c",
+          "is_selected": true,
+          "display_name": "date_key",
+          "type": "semantic_model.column",
+          "data_type": "DateTime",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "55141d83-e9c8-4633-b7cb-b17aaf2ac6c8",
+          "is_selected": true,
+          "display_name": "Total Sales",
+          "type": "semantic_model.measure",
+          "data_type": "Double",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "2885cac5-4600-468e-8c13-2235bc73657f",
+          "is_selected": true,
+          "display_name": "Units Sold",
+          "type": "semantic_model.measure",
+          "data_type": "Int64",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "d38ea57e-09f7-4635-a43c-f61f5693014c",
+          "is_selected": true,
+          "display_name": "Transaction Count",
+          "type": "semantic_model.measure",
+          "data_type": "Int64",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "70c89a24-3df8-45e5-880e-65558c1d8518",
+          "is_selected": true,
+          "display_name": "Avg Basket Size",
+          "type": "semantic_model.measure",
+          "data_type": "Double",
+          "description": null,
+          "children": []
+        }
+      ]
+    }
+  ]
+}
