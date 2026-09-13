@@ -10,6 +10,8 @@ Data quality is enforced using Great Expectations (GX Core 1.x) with expectation
 
 Tested locally with pytest, including directly against the generator's deliberately-messy Bronze output (`to_raw_product_rows`) — see `packages/grocery-gen/tests/test_quality_silver.py`. Not yet verified via a live Fabric pipeline run.
 
-## Gold: referential integrity (DR-006)
+## Gold: referential integrity (DR-006/DR-010)
 
-`gold_dim_product.Notebook` fails the run if any `conformed.product` row has no matching `conformed.category` row on `(department, category)` — a real assertion, not a GX expectation, since it's a one-off join-integrity check specific to this Gold output rather than a reusable per-entity rule.
+`gold_dim_product.Notebook` fails the run if any `conformed.product` row has no matching `conformed.category` row on `(department, category)` — a real assertion, not a GX expectation, since it's a one-off join-integrity check specific to this Gold output rather than a reusable per-entity rule. This is correct here because the relationship is guaranteed by construction (both derive from the same `TAXONOMY`), so a mismatch is a genuine bug.
+
+`gold_dim_customer.Notebook` takes the opposite stance for `preferred_store_id` → `dim_store` (DR-010): `NULL` is a legitimate "no preference" value, and a non-null orphan is realistic, expected messiness on a non-critical attribute rather than a bug — so it logs a count and keeps the row (raw invalid ID intact) instead of failing or nulling it out. Same relationship shape as DR-006, deliberately different response, because the two FKs don't carry the same guarantee.

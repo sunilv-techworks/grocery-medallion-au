@@ -91,7 +91,51 @@ TABLES = [
         "primary_key": ["department", "category"],
         "grain_description": "One row per (department, category); reference data, no standalone Gold output",
     },
-    # Phase 4 will add dim_store, dim_customer, fact_sales, fact_wastage here.
+    {
+        "name": "store",
+        "layer": "dim",
+        "group": "conformed_dims",
+        "bronze_landing_pattern": "Files/landing/site_master.parquet",
+        "column_mapping": {
+            "site_code": "store_id",
+            "site_name": "store_name",
+            "format_code": "store_format",
+            "state_code": "state",
+            "suburb_name": "suburb",
+            "postal_code": "postcode",
+            "size_sqm": "store_size_sqm",
+            "checkout_count": "num_checkouts",
+            "open_dt": "opened_date",
+            "bakery_flag": "has_bakery",
+            "deli_flag": "has_deli",
+            "pharmacy_flag": "has_pharmacy",
+        },
+        "scd2": False,
+        "primary_key": ["store_id"],
+        "grain_description": "One row per store, raw source-shaped in Bronze",
+    },
+    {
+        "name": "customer",
+        "layer": "dim",
+        "group": "conformed_dims",
+        "bronze_landing_pattern": "Files/landing/loyalty_members.parquet",
+        "column_mapping": {
+            "member_id": "customer_id",
+            "fname": "first_name",
+            "lname": "last_name",
+            "tier_code": "loyalty_tier",
+            "signup_dt": "join_date",
+            "state_code": "home_state",
+            "suburb_name": "home_suburb",
+            "postal_code": "home_postcode",
+            "home_store_code": "preferred_store_id",
+            "opt_in_flag": "marketing_opt_in",
+        },
+        "scd2": False,
+        "primary_key": ["customer_id"],
+        "grain_description": "One row per loyalty member, raw source-shaped in Bronze",
+    },
+    # Phase 4 will add fact_sales, fact_wastage here.
 ]
 
 # === GOLD OUTPUT DEFINITIONS — source of truth ===
@@ -110,6 +154,20 @@ GOLD_TABLES = [
         "sources": [],
         "gold_notebook": "gold_dim_calendar",
         "grain_description": "One row per date; generated directly (no Bronze/Silver source — see DR-009)",
+    },
+    {
+        "name": "dim_store",
+        "group": "conformed_dims",
+        "sources": ["store"],
+        "gold_notebook": "gold_dim_store",
+        "grain_description": "One row per store, with size-tier and store-age business columns",
+    },
+    {
+        "name": "dim_customer",
+        "group": "conformed_dims",
+        "sources": ["customer", "store"],
+        "gold_notebook": "gold_dim_customer",
+        "grain_description": "One row per loyalty member, enriched with preferred-store attributes",
     },
 ]
 

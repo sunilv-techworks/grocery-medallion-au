@@ -300,3 +300,63 @@ picked up automatically by the existing `conformed_dims` pipeline group — no
 pipeline changes needed. Verified locally: pytest suite covers the fiscal-year
 boundary and known public holidays. Not yet verified via a live Fabric
 pipeline run.
+
+---
+
+## DR-010 — `dim_store` and `dim_customer` follow the `dim_product` pattern; `dim_customer`'s referential-integrity check logs instead of failing
+
+**Status:** Decided · **Date raised:** 2026-09-13 · **Implemented:** 2026-09-13
+
+**Issue:** The next two Phase 4 entities, `dim_store` and `dim_customer`,
+needed the same design questions `dim_product` already answered (Bronze
+shape, Silver conformance, Gold business logic) — plus a new one:
+`dim_customer.preferred_store_id` is a foreign key to `dim_store`, and
+unlike `dim_product`'s product→category join, a miss here isn't obviously a
+bug. Should Gold's referential-integrity check behave the same way as
+`gold_dim_product`'s (fail the run)?
+
+**Options considered:**
+1. Full DR-005/006/007 pattern for both: source-shaped Bronze extract with
+   deliberate quality issues, generic Silver GX primary-key checkpoint, Gold
+   dimension-building — and treat any `preferred_store_id` mismatch as a
+   hard failure, exactly like `gold_dim_product`'s category check.
+2. Same Bronze/Silver/Gold shape, but recognise `preferred_store_id` as a
+   nullable, non-critical attribute: `NULL` is a legitimate "no preference"
+   business value (not a DQ issue at all), and a non-null value that matches
+   no store is realistic downstream messiness worth surfacing, not a bug
+   worth stopping the pipeline over — so Gold logs a count and keeps the raw
+   (invalid) ID on the row instead of failing or nulling it out.
+
+**Decision:** Option 2 — implemented.
+
+**Rationale:** DR-006's product→category relationship is guaranteed by
+construction (both derive from the same `TAXONOMY`), so a mismatch there
+really is a bug, and failing fast is correct. `dim_customer`'s
+`preferred_store_id` has no such guarantee — it's an optional attribute a
+real loyalty system would populate inconsistently, and the generator
+deliberately gives ~5% of customers a fixed invalid store code (`STR-9999`)
+specifically so this check has something real to catch. Hard-failing the
+entire Gold run over an optional, non-critical FK would be disproportionate
+and would make it impossible to ever see the resulting table; logging and
+keeping the row is the more realistic response, and gives the RI check
+something to actually demonstrate rather than only ever passing.
+
+**Implementation note:** `grocery_gen.dimensions.stores` and
+`.dimensions.customers` mirror `.dimensions.products` exactly: a conformed
+row model, a raw source-shaped row model with the same deterministic
+null-key/duplicate-row injection (`to_raw_store_rows`, `to_raw_customer_rows`,
+same `messy_rate` mechanism as `to_raw_product_rows`), and a `grocery-gen
+stores`/`customers` CLI command. New `reference/geography.py` supplies a
+curated AU state/suburb/postcode pool (hand-crafted, matching the existing
+`brands.py`/`fresh_goods.py` style rather than introducing Faker, which is a
+listed but never-used dependency). Both entities register in
+`config.table_metadata` with zero changes needed to `run_bronze.Notebook` or
+`run_silver.Notebook` — both were already fully generic. `gold_dim_store.Notebook`
+(single source, no join) adds a surrogate key, `size_tier`, and
+`store_age_years`. `gold_dim_customer.Notebook` joins `customer` to `store`
+on `preferred_store_id`, adds a surrogate key, `tenure_years`, and the
+`preferred_store_state`/`preferred_store_format` enrichment columns (null
+when there's no match, by design). Verified locally: 65 pytest tests pass,
+ruff and mypy --strict clean, including a test asserting the generator
+actually produces the valid/null/orphan `preferred_store_id` mix the Gold
+check depends on. Not yet verified via a live Fabric pipeline run.

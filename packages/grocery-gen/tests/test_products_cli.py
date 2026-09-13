@@ -37,6 +37,31 @@ def test_categories_command_writes_parquet(tmp_path: Path) -> None:
     assert not frame.duplicated(subset=["department", "category"]).any()
 
 
+def test_stores_command_writes_parquet(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["stores", "--count", "50", "--out", str(tmp_path)])
+    assert result.exit_code == 0, result.stdout
+    output = tmp_path / "site_master.parquet"
+    assert output.exists()
+    frame = pd.read_parquet(output)
+    assert len(frame) > 50  # duplicates injected on top of the 50 base rows
+    assert "site_code" in frame.columns
+    assert frame["site_code"].isna().sum() > 0
+
+
+def test_customers_command_writes_parquet(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        ["customers", "--count", "200", "--num-stores", "50", "--out", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.stdout
+    output = tmp_path / "loyalty_members.parquet"
+    assert output.exists()
+    frame = pd.read_parquet(output)
+    assert len(frame) > 200  # duplicates injected on top of the 200 base rows
+    assert "member_id" in frame.columns
+    assert frame["member_id"].isna().sum() > 0
+
+
 def test_calendar_command_writes_parquet(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
