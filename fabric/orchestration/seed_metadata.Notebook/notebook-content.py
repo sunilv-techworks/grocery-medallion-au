@@ -135,7 +135,47 @@ TABLES = [
         "primary_key": ["customer_id"],
         "grain_description": "One row per loyalty member, raw source-shaped in Bronze",
     },
-    # Phase 4 will add fact_sales, fact_wastage here.
+    {
+        "name": "sales",
+        "layer": "fact",
+        "group": "conformed_dims",
+        "bronze_landing_pattern": "Files/landing/sales_transactions.parquet",
+        "column_mapping": {
+            "txn_date": "date",
+            "site_code": "store_id",
+            "sku_id": "product_id",
+            "qty": "quantity_sold",
+            "unit_price": "unit_price_aud",
+            "promo_flag": "is_promo",
+            "line_revenue": "revenue_aud",
+            "line_cost": "cost_aud",
+            "gst_amt": "gst_amount_aud",
+        },
+        "scd2": False,
+        "primary_key": ["date", "store_id", "product_id"],
+        "grain_description": "One row per (date, store, product) with at least one unit sold, raw source-shaped in Bronze",
+    },
+    {
+        "name": "wastage",
+        "layer": "fact",
+        "group": "conformed_dims",
+        "bronze_landing_pattern": "Files/landing/wastage_log.parquet",
+        "column_mapping": {
+            "txn_date": "date",
+            "site_code": "store_id",
+            "sku_id": "product_id",
+            "qty": "wastage_qty",
+            "cost_amt": "wastage_cost_aud",
+            "reason_code": "wastage_reason",
+        },
+        "scd2": False,
+        "primary_key": ["date", "store_id", "product_id"],
+        "grain_description": "One row per (date, store, perishable product) with wastage recorded, raw source-shaped in Bronze",
+    },
+    # group is still "conformed_dims" for facts too, not a naming mismatch
+    # worth its own pipeline group: BronzeDims/SilverDims/GoldDims just
+    # filter table_metadata/gold_metadata by group value, so reusing it
+    # here needs zero pipeline-content.json changes.
 ]
 
 # === GOLD OUTPUT DEFINITIONS — source of truth ===
@@ -168,6 +208,22 @@ GOLD_TABLES = [
         "sources": ["customer", "store"],
         "gold_notebook": "gold_dim_customer",
         "grain_description": "One row per loyalty member, enriched with preferred-store attributes",
+    },
+    {
+        "name": "fact_sales",
+        "group": "conformed_dims",
+        "sources": ["sales"],
+        "gold_notebook": "gold_fact_sales",
+        "grain_description": "One row per (date, store, product) sold; dimension natural keys resolved to surrogate keys",
+        "depends_on": ["dim_product", "dim_store"],
+    },
+    {
+        "name": "fact_wastage",
+        "group": "conformed_dims",
+        "sources": ["wastage"],
+        "gold_notebook": "gold_fact_wastage",
+        "grain_description": "One row per (date, store, product) wastage event; dimension natural keys resolved to surrogate keys",
+        "depends_on": ["dim_product", "dim_store"],
     },
 ]
 
@@ -203,10 +259,22 @@ gold_schema = StructType([
     StructField("sources", ArrayType(StringType()), nullable=False),
     StructField("gold_notebook", StringType(), nullable=False),
     StructField("grain_description", StringType(), nullable=False),
+    # Other Gold *output* names (not Silver sources) that must be written
+    # first — e.g. a fact resolving dimension surrogate keys needs those
+    # dimensions already in Gold. run_gold's dispatcher topologically
+    # sorts on this before running anything (see run_gold.Notebook).
+    StructField("depends_on", ArrayType(StringType()), nullable=False),
 ])
 
 gold_rows = [
-    (t["name"], t["group"], list(t["sources"]), t["gold_notebook"], t["grain_description"])
+    (
+        t["name"],
+        t["group"],
+        list(t["sources"]),
+        t["gold_notebook"],
+        t["grain_description"],
+        list(t.get("depends_on", [])),
+    )
     for t in GOLD_TABLES
 ]
 

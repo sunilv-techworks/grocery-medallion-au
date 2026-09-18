@@ -42,6 +42,12 @@ separate table from config.table_metadata because Gold is a different
 grain: one Gold output can consume multiple Silver sources, and one Silver
 source can feed multiple Gold outputs (many-to-many), which doesn't fit as
 a column on the entity-grain table_metadata.
+
+Outputs run in depends_on order, not table order: a Delta table's
+.collect() row order isn't guaranteed to match insertion order, and facts
+resolving dimension surrogate keys (fact_sales, fact_wastage — DR-011) need
+their dimensions already written to Gold. A small repeated-pass topological
+sort is enough here — a handful of outputs, not a real DAG scheduler.
 """
 
 # === Parameters (overridden by pipeline) ===
@@ -59,6 +65,23 @@ GOLD_METADATA_PATH = (
 )
 all_metadata = spark.read.format("delta").load(GOLD_METADATA_PATH).collect()
 outputs_to_process = [row for row in all_metadata if row["group"] == group]
+
+by_name = {t["name"]: t for t in outputs_to_process}
+resolved_names: list[str] = []
+remaining = list(outputs_to_process)
+while remaining:
+    ready = [
+        t for t in remaining
+        if all(d in resolved_names or d not in by_name for d in (t["depends_on"] or []))
+    ]
+    if not ready:
+        raise ValueError(
+            f"Unresolvable gold_metadata depends_on among: {[t['name'] for t in remaining]}"
+        )
+    for t in ready:
+        resolved_names.append(t["name"])
+        remaining.remove(t)
+outputs_to_process = [by_name[name] for name in resolved_names]
 
 print(f"Gold dispatcher: group={group}, run_id={run_id}, "
       f"outputs={[t['name'] for t in outputs_to_process]}")

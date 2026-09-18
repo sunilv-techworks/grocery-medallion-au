@@ -24,6 +24,14 @@ FORMAT_CHECKOUT_RANGE: dict[StoreFormat, tuple[int, int]] = {
     "Express": (1, 3),
 }
 
+# Relative foot-traffic/throughput by format, relative to Metro=1.0 — used
+# by facts/sales.py and facts/wastage.py to scale daily volume per store.
+STORE_FORMAT_VELOCITY_MULTIPLIER: dict[StoreFormat, float] = {
+    "Supermarket": 1.6,
+    "Metro": 1.0,
+    "Express": 0.4,
+}
+
 # Fixed anchor for opened_date so generation stays deterministic across runs
 # (no date.today() — same reasoning as every other seeded generator here).
 _REFERENCE_DATE = date(2026, 1, 1)

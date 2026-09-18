@@ -131,5 +131,71 @@ def customers(
     rprint(f"[green]Wrote[/green] {len(raw_rows)} loyalty_members rows to {written}")
 
 
+@app.command()
+def sales(
+    start: str = typer.Option("2024-01-01", "--start", help="Start date (YYYY-MM-DD)"),
+    end: str = typer.Option("2025-12-31", "--end", help="End date (YYYY-MM-DD)"),
+    num_products: int = typer.Option(
+        50, "--num-products", help="Sample size from the full product catalogue"
+    ),
+    num_stores: int = typer.Option(150, "--num-stores", help="Number of stores"),
+    seed: int = typer.Option(42, "--seed", help="Random seed"),
+    output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
+) -> None:
+    """Generate the raw sales_transactions Bronze extract and write it to Parquet."""
+    from grocery_gen.dimensions.products import generate_products
+    from grocery_gen.dimensions.stores import generate_stores
+    from grocery_gen.facts.sales import generate_sales_facts, to_raw_sales_rows
+    from grocery_gen.facts.sampling import sample_products
+    from grocery_gen.writers.parquet import write_dataframe
+
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    rprint(
+        f"[cyan]Generating[/cyan] sales facts for {num_products} products x "
+        f"{num_stores} stores, {start_date} to {end_date}..."
+    )
+    all_products = sample_products(generate_products(n=2000, seed=seed), n=num_products, seed=seed)
+    all_stores = generate_stores(n=num_stores, seed=seed)
+    df = generate_sales_facts(all_products, all_stores, start_date, end_date, seed=seed)
+    raw_df = to_raw_sales_rows(df, seed=seed)
+    output_path = output_dir / "sales_transactions.parquet"
+    written = write_dataframe(raw_df, output_path)
+    rprint(f"[green]Wrote[/green] {len(raw_df)} sales_transactions rows to {written}")
+
+
+@app.command()
+def wastage(
+    start: str = typer.Option("2024-01-01", "--start", help="Start date (YYYY-MM-DD)"),
+    end: str = typer.Option("2025-12-31", "--end", help="End date (YYYY-MM-DD)"),
+    num_products: int = typer.Option(
+        50, "--num-products", help="Sample size from the full product catalogue"
+    ),
+    num_stores: int = typer.Option(150, "--num-stores", help="Number of stores"),
+    seed: int = typer.Option(42, "--seed", help="Random seed"),
+    output_dir: Path = typer.Option(Path("./data"), "--out", help="Output directory"),
+) -> None:
+    """Generate the raw wastage_log Bronze extract and write it to Parquet."""
+    from grocery_gen.dimensions.products import generate_products
+    from grocery_gen.dimensions.stores import generate_stores
+    from grocery_gen.facts.sampling import sample_products
+    from grocery_gen.facts.wastage import generate_wastage_facts, to_raw_wastage_rows
+    from grocery_gen.writers.parquet import write_dataframe
+
+    start_date = date.fromisoformat(start)
+    end_date = date.fromisoformat(end)
+    rprint(
+        f"[cyan]Generating[/cyan] wastage facts for {num_products} products x "
+        f"{num_stores} stores, {start_date} to {end_date}..."
+    )
+    all_products = sample_products(generate_products(n=2000, seed=seed), n=num_products, seed=seed)
+    all_stores = generate_stores(n=num_stores, seed=seed)
+    df = generate_wastage_facts(all_products, all_stores, start_date, end_date, seed=seed)
+    raw_df = to_raw_wastage_rows(df, seed=seed)
+    output_path = output_dir / "wastage_log.parquet"
+    written = write_dataframe(raw_df, output_path)
+    rprint(f"[green]Wrote[/green] {len(raw_df)} wastage_log rows to {written}")
+
+
 if __name__ == "__main__":
     app()

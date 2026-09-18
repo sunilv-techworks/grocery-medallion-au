@@ -360,3 +360,84 @@ when there's no match, by design). Verified locally: 65 pytest tests pass,
 ruff and mypy --strict clean, including a test asserting the generator
 actually produces the valid/null/orphan `preferred_store_id` mix the Gold
 check depends on. Not yet verified via a live Fabric pipeline run.
+
+---
+
+## DR-011 — `fact_sales` and `fact_wastage`: scale, generation approach, and Gold-layer surrogate-key resolution
+
+**Status:** Decided · **Date raised:** 2026-09-19 · **Implemented:** 2026-09-19
+
+**Issue:** The first two fact tables raised three questions the dimension
+work hadn't needed to answer: how big a fact table this portfolio project
+should actually generate, whether the per-row pydantic style `dimensions/`
+uses still holds up at fact scale, and how a fact's Gold layer should
+resolve the dimension surrogate keys a real star schema needs.
+
+**Options considered (volume/grain):**
+1. Full scale: all ~2000 products x 150 stores x the ~2.7-year span
+   `dim_calendar` covers, dense daily grain. ~300M+ candidate rows — not
+   sane to generate or run locally or in a Fabric trial-capacity workspace.
+2. A deliberately small, explicit slice — 50 products (a uniform sample of
+   the catalogue, not "the first 50" — see `facts/sampling.py`) x all 150
+   stores x a fixed 2-year window (2024-01-01–2025-12-31) — agreed with the
+   user directly rather than assumed.
+
+**Options considered (generation approach):**
+1. Keep the `dimensions/`-style pydantic-per-row model, looping over every
+   (date, store, product) combination.
+2. Vectorise with numpy/pandas: build the whole rate tensor at once, draw
+   quantities with one `rng.poisson()` call, and only ever materialise the
+   rows that actually sold (`np.nonzero`) into a DataFrame — no per-row
+   Python object at all.
+
+**Options considered (Gold surrogate keys):**
+1. Keep `product_id`/`store_id` as the only join keys in `fact_sales`/
+   `fact_wastage`, matching Silver's shape.
+2. Resolve real surrogate keys (`product_sk`, `store_sk`) by joining
+   against **Gold** `dim_product`/`dim_store` (not Silver — those surrogate
+   keys don't exist until Gold writes them), and compute `date_key`
+   algorithmically (same `yyyyMMdd` formula `gold_dim_calendar.Notebook`
+   already uses) rather than joining `dim_calendar` for it.
+
+**Decision:** Option 2 in all three — implemented.
+
+**Rationale:** (volume/grain) Even the deliberately small slice is ~5.5M
+grid cells before Poisson sparsity — big enough to be a real fact table,
+small enough to generate in under 2 seconds and stay well within a trial
+Fabric capacity's compute. (generation approach) At millions of rows,
+pydantic-per-row construction and per-row `model_copy` (as
+`to_raw_product_rows` uses) would take minutes instead of seconds; vectorised
+numpy is both faster and more idiomatic at this scale — a deliberate,
+documented departure from the dimensions/ style, not an inconsistency.
+(surrogate keys) A star schema's whole point is dimension tables carrying
+the surrogate keys, so fact tables' Gold job is specifically to resolve
+them — this is the one place Gold legitimately joins *Gold*, not Silver.
+`config.gold_metadata` gained a `depends_on` column so `run_gold.Notebook`'s
+dispatcher can topologically sort outputs before running them: without it,
+a fact table could run before `dim_product`/`dim_store` exist, since a
+Delta table's `.collect()` row order isn't guaranteed to match insertion
+order — a real latent bug this surfaced, not a hypothetical one.
+
+**Implementation note:** `grocery_gen/facts/` (`sales.py`, `wastage.py`,
+`sampling.py`) generate fully vectorised, reusing `seasonality_vector` from
+`dimensions/products.py` for sales demand (department base rate x
+store-format multiplier x weekend bump x seasonality) and *inverting* the
+same vector for wastage (in season, faster turnover means less time to
+spoil; off-season, the opposite) — the actual "fresh-goods" differentiator
+the README claims, derived from data DR-005 already generates rather than
+a separate assumption. `to_raw_sales_rows`/`to_raw_wastage_rows` inject the
+same deterministic null-key/duplicate-row quality issues as the dimension
+generators, via pandas ops rather than per-row `model_copy`. Both register
+in `config.table_metadata` with a compound primary key
+`(date, store_id, product_id)` — Silver's existing generic GX checkpoint
+(DR-005) already supports compound keys via `ExpectCompoundColumnsToBeUnique`,
+so zero Silver code changes were needed. `gold_fact_sales.Notebook`/
+`gold_fact_wastage.Notebook` hard-fail on a missing `product_sk`/`store_sk`
+after the join — same reasoning as DR-006 (every key is guaranteed by
+construction and Silver's PK check already dropped null-key rows, so a miss
+here is a real bug, unlike DR-010's deliberately-nullable customer FK).
+Verified locally: full-scale generation (50 products x 150 stores x 2
+years) produced 5,163,155 `fact_sales` rows and 694,333 `fact_wastage` rows
+in under 2 seconds combined; 84 pytest tests pass, ruff and mypy --strict
+clean. Not yet verified via a live Fabric pipeline run — the `depends_on`
+ordering fix in particular can only be fully exercised there.
