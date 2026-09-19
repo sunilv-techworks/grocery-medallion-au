@@ -1,3 +1,4 @@
 dependencies:
   - pip:
     - great-expectations==1.17.0
+    - holidays==0.95

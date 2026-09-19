@@ -494,5 +494,15 @@ this tenant already), and `Libraries/PublicLibraries/environment.yml` pins
 already depends on and was tested against locally, to keep the Fabric-side
 mirror's GX API surface identical to what `quality/silver.py` uses.
 `util_dq.Notebook` simply drops the `%pip install` cell; its GX checkpoint
-code is unchanged. Not yet verified via a live Fabric run — that requires
-the user to publish the environment and set it as workspace default first.
+code is unchanged.
+
+**Update (2026-09-19, same day):** publishing the environment and setting
+it as default unblocked `run_silver`, but the next Gold run failed on the
+exact same error fetching `gold_dim_calendar` — that notebook (DR-009,
+written before this environment existed) had its own `%pip install
+holidays` cell for the identical reason. Added `holidays==0.95` (the
+version `packages/grocery-gen` is tested against) to the same
+`env_grocery_engineering` public-library list and dropped that notebook's
+`%pip` cell too. Grepped the rest of `fabric/` for `%pip install` to
+confirm those were the only two occurrences. Still not verified via a
+live Fabric run — that's the very next thing to confirm.

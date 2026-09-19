@@ -23,19 +23,6 @@
 
 # CELL ********************
 
-# The engineering workspace has no custom environment (DR-008), so
-# `holidays` is installed inline rather than via a pre-built environment.
-%pip install holidays
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 """Gold dim_calendar — generated directly, no Bronze/Silver source (DR-009).
 
 Unlike dim_product, there's no real-world "raw" system a date dimension
