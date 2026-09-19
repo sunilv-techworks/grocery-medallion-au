@@ -23,20 +23,6 @@
 
 # CELL ********************
 
-# The engineering workspace has no custom environment (DR-008: none of its
-# notebooks needed grocery_gen, so none was provisioned), so great-expectations
-# is installed inline rather than via a pre-built environment/wheel.
-%pip install great-expectations
-
-# METADATA ********************
-
-# META {
-# META   "language": "python",
-# META   "language_group": "synapse_pyspark"
-# META }
-
-# CELL ********************
-
 """Shared DQ checks for runner notebooks. Included via %run util_dq.
 
 DR-005: an actual Great Expectations checkpoint, not hand-rolled asserts.
@@ -49,10 +35,14 @@ that halts the whole pipeline on rows it could reasonably drop.
 Mirrors packages/grocery-gen/src/grocery_gen/quality/silver.py, duplicated
 rather than imported because the engineering workspace can't install this
 repo's own wheel (see DR-008 — only orchestration's seed_metadata notebook
-does). Validates via pandas after a driver-side collect rather than
-natively in Spark: at this project's data volumes (thousands of rows) that's
-a reasonable trade-off for a real GX checkpoint over hand-rolled asserts; a
-genuinely large table would need Spark-native GX
+does). great_expectations itself comes from env_grocery_engineering (DR-012:
+inline `%pip install` is disabled by this tenant's policy, so it has to be a
+public library on an attached environment instead, set as this workspace's
+default — see docs/decision-register.md). Validates via pandas after a
+driver-side collect rather than natively in Spark: at this project's data
+volumes that's a reasonable trade-off for a real GX checkpoint over
+hand-rolled asserts, though DR-011 already stretched that assumption at fact
+scale (~5M rows); a genuinely large table would need Spark-native GX
 (context.data_sources.add_spark(...)) instead.
 """
 

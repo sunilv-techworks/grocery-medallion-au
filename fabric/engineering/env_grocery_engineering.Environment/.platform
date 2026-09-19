@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Environment",
+    "displayName": "env_grocery_engineering",
+    "description": "Environment"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "049542e8-27f3-4598-8e9c-359d3b1625c5"
+  }
+}

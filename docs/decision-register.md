@@ -441,3 +441,58 @@ years) produced 5,163,155 `fact_sales` rows and 694,333 `fact_wastage` rows
 in under 2 seconds combined; 84 pytest tests pass, ruff and mypy --strict
 clean. Not yet verified via a live Fabric pipeline run — the `depends_on`
 ordering fix in particular can only be fully exercised there.
+
+---
+
+## DR-012 — `great_expectations` in the engineering workspace via a real Environment, not inline `%pip install`
+
+**Status:** Decided · **Date raised:** 2026-09-19 · **Implemented:** 2026-09-19
+
+**Issue:** The first live pipeline run against everything through DR-011
+failed at `run_silver` with `MagicUsageError: %pip magic command is
+disabled` — this Fabric tenant has inline `%pip install` blocked by policy
+(a standard enterprise security setting), which is exactly the mechanism
+`util_dq.Notebook` used to get `great-expectations` into the engineering
+workspace (DR-005/DR-008, since that workspace had no environment). This
+wasn't a hypothetical risk flagged in a docstring anymore — it broke the
+actual pipeline run.
+
+**Options considered:**
+1. Quick unblock: revert `util_dq.Notebook`'s checkpoint to hand-rolled
+   PySpark not-null/uniqueness checks, matching what DR-005 originally
+   replaced — no external package, no environment needed.
+2. Proper fix: add a real Fabric Environment (`env_grocery_engineering`)
+   to the engineering workspace with `great-expectations` as a public
+   library, mirroring how `env_grocery_orchestration` already provides
+   `grocery_gen` to `seed_metadata` — and set it as the workspace's default
+   environment so `util_dq`/`run_silver` pick it up without a per-notebook
+   attachment.
+
+**Decision:** Option 2, chosen by the user directly — implemented.
+
+**Rationale:** Reverting to hand-rolled checks would have re-introduced
+exactly the inconsistency DR-005 existed to remove, driven by a real
+platform constraint rather than a design improvement — a strictly worse
+trade than investing in the environment. Investigating the fix also
+surfaced something useful: `seed_metadata.Notebook`'s own git-exported
+metadata shows `"environment": {}` (empty) despite depending on
+`env_grocery_orchestration`, which means that attachment isn't tracked
+per-notebook in this schema at all — it comes from the *workspace's*
+default-environment setting (Workspace Settings → Spark settings → Set
+default environment). `env_grocery_engineering` needs the same treatment:
+Git sync alone only stages it, so it still needs (a) a manual **Publish**
+from the environment item in the portal — builds compute and installs the
+public library, several minutes — and (b) being set as
+`ws-grocery-engineering-dev`'s default environment. Neither step is
+scriptable from here.
+
+**Implementation note:** New
+`fabric/engineering/env_grocery_engineering.Environment/` — `Setting/Sparkcompute.yml`
+mirrors `env_grocery_orchestration`'s compute sizing (proven to work in
+this tenant already), and `Libraries/PublicLibraries/environment.yml` pins
+`great-expectations==1.17.0` — the exact version `packages/grocery-gen`
+already depends on and was tested against locally, to keep the Fabric-side
+mirror's GX API surface identical to what `quality/silver.py` uses.
+`util_dq.Notebook` simply drops the `%pip install` cell; its GX checkpoint
+code is unchanged. Not yet verified via a live Fabric run — that requires
+the user to publish the environment and set it as workspace default first.
