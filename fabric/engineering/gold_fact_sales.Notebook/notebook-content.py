@@ -35,13 +35,20 @@ Silver — those surrogate keys (product_sk, store_sk) only exist in Gold.
 config.gold_metadata's depends_on ensures the dispatcher runs dim_product
 and dim_store first (see run_gold.Notebook).
 
-Referential integrity is a hard failure here, same reasoning as
-gold_dim_product's category join (DR-006): every product_id/store_id in
-Silver's conformed.sales was drawn from the same product/store lists used
-to generate it, and Silver's compound primary-key check already dropped any
-row with a null natural key — so a surrogate-key miss here would mean a
-real bug, not expected messiness (contrast DR-010's dim_customer, where an
-orphan is a legitimate, expected outcome).
+DR-013 (correction to DR-011): referential integrity here logs and drops
+orphaned rows rather than hard-failing. DR-011 assumed a miss would always
+mean a real bug, on the theory that every product_id/store_id was drawn
+from the same lists used to generate this fact — but a live run proved
+that wrong: dim_store's own Bronze-messiness injection (DR-005's pattern,
+applied independently when site_master.parquet was generated) legitimately
+dropped one store's natural key at Silver, while this fact was generated
+from the full, clean store list and has no way to know that. The two
+generation runs are independent, so a dimension-side DQ drop can orphan
+otherwise-valid fact rows — a real, if narrow, cross-entity inconsistency,
+not a bug. Unlike DR-010's dim_customer (where the row itself is still
+useful without a resolved preferred store), a fact row with no resolvable
+product_sk/store_sk can't be placed in the star schema at all, so it's
+dropped rather than kept with nulls.
 
 date_key is computed directly (yyyyMMdd), the same formula
 gold_dim_calendar.Notebook uses to define it — an algorithmic join key,
@@ -74,13 +81,14 @@ joined = (
 
 missing = joined.filter(col("product_sk").isNull() | col("store_sk").isNull()).count()
 if missing:
-    raise ValueError(
-        f"{missing} fact_sales row(s) have no matching dim_product/dim_store — "
-        "referential integrity violation (see DR-011)"
+    print(
+        f"  [dq] fact_sales: dropped {missing} row(s) with no matching "
+        "dim_product/dim_store (see DR-013)"
     )
 
 df_gold = (
     joined
+    .filter(col("product_sk").isNotNull() & col("store_sk").isNotNull())
     .drop("_silver_loaded_at_utc")
     .withColumn("date_key", date_format(col("date"), "yyyyMMdd").cast("int"))
 )

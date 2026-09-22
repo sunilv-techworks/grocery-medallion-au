@@ -30,8 +30,11 @@
 
 Mirrors gold_fact_sales.Notebook exactly (see its docstring for the full
 reasoning on why this joins Gold dimensions rather than Silver, why the
-referential-integrity check is a hard failure here, and why date_key is
-computed rather than looked up — DR-011).
+referential-integrity check logs and drops orphaned rows rather than
+hard-failing, and why date_key is computed rather than looked up —
+DR-011/DR-013). This notebook is in fact where that hard-fail assumption
+was actually disproven: a live run found 5,347 rows referencing a store
+(STR-0028) that dim_store's own Bronze-messiness injection had dropped.
 
 Reads lh_silver.conformed.wastage + lh_gold.conformed.dim_product +
 lh_gold.conformed.dim_store, writes lh_gold.conformed.fact_wastage.
@@ -60,13 +63,14 @@ joined = (
 
 missing = joined.filter(col("product_sk").isNull() | col("store_sk").isNull()).count()
 if missing:
-    raise ValueError(
-        f"{missing} fact_wastage row(s) have no matching dim_product/dim_store — "
-        "referential integrity violation (see DR-011)"
+    print(
+        f"  [dq] fact_wastage: dropped {missing} row(s) with no matching "
+        "dim_product/dim_store (see DR-013)"
     )
 
 df_gold = (
     joined
+    .filter(col("product_sk").isNotNull() & col("store_sk").isNotNull())
     .drop("_silver_loaded_at_utc")
     .withColumn("date_key", date_format(col("date"), "yyyyMMdd").cast("int"))
 )

@@ -506,3 +506,61 @@ version `packages/grocery-gen` is tested against) to the same
 `%pip` cell too. Grepped the rest of `fabric/` for `%pip install` to
 confirm those were the only two occurrences. Still not verified via a
 live Fabric run — that's the very next thing to confirm.
+
+---
+
+## DR-013 — Correction to DR-011: fact referential integrity logs and drops orphans, doesn't hard-fail
+
+**Status:** Decided · **Date raised:** 2026-09-22 · **Implemented:** 2026-09-22
+
+**Issue:** With the environment fix landed, Silver ran clean but Gold
+failed for real this time — not an infra problem, a data one:
+`gold_fact_wastage.Notebook` raised its DR-011 hard-fail check, reporting
+5,347 rows with no matching `dim_product`/`dim_store`. Querying the live
+Delta tables directly (`lh_silver.conformed.wastage`,
+`lh_gold.conformed.dim_product`, `lh_gold.conformed.dim_store`) found the
+cause: `dim_store` has 149 rows, not 150 — one store (`STR-0028`) had its
+natural key nulled by `site_master.parquet`'s own deliberate Bronze-
+messiness injection (the same `to_raw_store_rows` mechanism DR-005
+established) and was correctly dropped by Silver's primary-key check. But
+`fact_wastage` was generated from the full, clean 150-store list in a
+completely separate CLI run (`grocery-gen wastage`, independent of
+`grocery-gen stores`), so it still references `STR-0028` — DR-011's
+"guaranteed by construction" premise was wrong: the two generation runs
+share a seed and a store-ID *format*, not a synchronized, corrected
+store *list*.
+
+**Options considered:**
+1. Keep the hard fail; make the fact generators aware of which specific
+   dimension rows a sibling generation run will drop, so facts never
+   reference them in the first place.
+2. Change the Gold referential-integrity check itself: log the count and
+   **drop** the orphaned rows (not keep-with-null, since a fact row with
+   no resolvable surrogate key can't be placed in the star schema at all —
+   unlike DR-010's `dim_customer`, where the row is still useful without a
+   resolved store preference).
+
+**Decision:** Option 2 — implemented.
+
+**Rationale:** Option 1 would mean two independently-invoked CLI commands
+(`grocery-gen stores` and `grocery-gen sales`/`wastage`) coordinating on
+which specific rows a *different* command's random messiness draw will
+remove — real coupling for a cosmetic reason, and it would still leave the
+underlying scenario unhandled for the next dimension that gets facts added
+against it. The scenario itself is realistic, not a generator artifact: a
+site-master feed having a data-quality issue on one store while that
+store's POS keeps recording real transactions is exactly the kind of thing
+a Gold layer should detect and route around, not treat as fatal. DR-011's
+mistake was assuming "same generation logic" meant "same guarantee as
+DR-006's product→category join" (single generation run, shared source of
+truth) — it doesn't, once two *independent* generation runs are involved.
+
+**Implementation note:** `gold_fact_sales.Notebook`/`gold_fact_wastage.Notebook`
+both now `print` a `[dq]`-prefixed count and `.filter(col("product_sk").isNotNull()
+& col("store_sk").isNotNull())` before writing, instead of raising. Verified
+by re-querying the live tables after the fix's next run (see follow-up
+verification). Also confirmed via direct Delta reads that `fact_sales` had
+never been written at all before this fix — `run_gold.Notebook`'s dispatcher
+re-raises and stops on the first failing output, so `fact_wastage` failing
+blocked whichever outputs (including `fact_sales`, if it hadn't already run)
+came after it in that pass.
